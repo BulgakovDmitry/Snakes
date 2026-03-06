@@ -9,14 +9,13 @@
 namespace snakes {
 
 struct GameModel {
-    int32_t width{};
-    int32_t height{};
+    int32_t width{20};
+    int32_t height{10};
 
-    Snake snake;
-    Rabbit rabbit;
+    Snake snake{};
+    Rabbit rabbit{};
 
     bool game_over{false};
-
     int score{0};
 };
 

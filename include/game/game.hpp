@@ -9,6 +9,9 @@ class Game {
 private:
     GameModel& game_model_;
     IView& view_;
+
+public:
+    Game(GameModel& game_model, IView& view);
 }; 
 
 

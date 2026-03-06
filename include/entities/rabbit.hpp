@@ -1,16 +1,33 @@
 #pragma once
 
 #include "types.hpp"
+#include "snake.hpp"
 #include <deque>
 
 namespace snakes {
 
 class Rabbit {
 private:
-    Point position_;
+    Point position_{};
 public:
-    void spawn(int width, int height, const std::deque<Point>& snake_body);
-    Point get_position() const noexcept;
+    Rabbit() = default;
+    explicit Rabbit(Point position);
+
+    void set_position(Point position) noexcept;
+    Point position() const noexcept;
+    void spawn(int width, int height, const Snake& snake);
 };
+
+// ----------------------------------------------------------------------------
+// @section Implementations
+// Implementations
+// ----------------------------------------------------------------------------
+inline Rabbit::Rabbit(Point position) : position_(position) {}
+
+inline void Rabbit::set_position(Point position) noexcept { position_ = position; }
+
+inline Point Rabbit::position() const noexcept { return position_; }
+
+inline void Rabbit::spawn(int width, int height, const Snake& snake) {} //TODO: implement
 
 } // namespace snakes
