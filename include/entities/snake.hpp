@@ -1,7 +1,7 @@
 #pragma once
 
 #include <deque>
-#include "types.hpp"
+#include "core/types.hpp"
 
 namespace snakes {
 
