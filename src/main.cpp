@@ -3,7 +3,7 @@
 
 
 int main() {
-    snakes::GameModel model(80, 20);
+    snakes::GameModel model{};
     snakes::AsciiView view{};
 
     std::cout << "Welcome to Snakes!" << std::endl;
