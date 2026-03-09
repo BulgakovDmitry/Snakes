@@ -1,6 +1,9 @@
 #pragma once
 
+#include <thread>
+#include <chrono>
 #include <stdexcept>
+#include <iostream>
 #include "game/game_model.hpp"
 #include "view/view.hpp"
 
@@ -11,7 +14,7 @@ private:
     GameModel& model_;
     IView& view_;
 
-    bool running_{false};
+    bool running_{true};
 
 public:
     Game(GameModel& model, IView& view);
@@ -33,8 +36,10 @@ Game::Game(GameModel& model, IView& view)
 
 void Game::run() {
     while (running_) {
-        process_event();
+        // std::cout << "Running game loop..." << std::endl;
+        //process_event();
         view_.render(model_);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 }
 

@@ -3,12 +3,14 @@
 
 
 int main() {
-    snakes::GameModel model{};
+    snakes::GameModel model(80, 20);
     snakes::AsciiView view{};
 
-    // snakes::Game game(model, view, true);
+    std::cout << "Welcome to Snakes!" << std::endl;
 
-    // game.run();
+    snakes::Game game(model, view);
 
-    return 0;
+    std::cout << "Press any key to start..." << std::endl;
+
+    game.run();
 }
