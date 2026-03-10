@@ -10,7 +10,6 @@ int main() {
 
     snakes::Game game(model, view);
 
-    std::cout << "Press any key to start..." << std::endl;
 
     game.run();
 }

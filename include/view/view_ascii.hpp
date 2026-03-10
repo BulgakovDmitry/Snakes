@@ -5,6 +5,9 @@
 #include <optional>
 #include <ostream>
 #include <iostream>
+#include <termios.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 #include "game/game_model.hpp"
 #include "view.hpp"
@@ -29,7 +32,12 @@ struct AsciiView::Impl {
     std::ostream& out{std::cout};
     std::string buffer = "\033[2J\033[H";
 
-    Impl() = default;
+    termios old_term{};
+    bool terminal_configured{false};
+
+    Impl() { setup_terminal(); }
+
+    ~Impl() { restore_terminal(); }
 
     void clear_screen();
     void draw(const GameModel& model);
@@ -38,7 +46,13 @@ struct AsciiView::Impl {
     void set_color(const int bg_color);
     void reset_color();
 
+
+    std::optional<Event> read_key();
+
 private:
+    void setup_terminal();
+    void restore_terminal();
+
     void draw_frame(uint32_t width, uint32_t height, 
                     Point curr_pos);
 
@@ -63,7 +77,7 @@ void AsciiView::render(const GameModel& model) {
 }
 
 std::optional<Event> AsciiView::poll_event() {
-    return std::nullopt; //TODO: implement
+    return impl_->read_key();
 }
 
 void AsciiView::Impl::clear_screen() {
@@ -90,7 +104,7 @@ void AsciiView::Impl::draw(const GameModel& model) {
     uint32_t width = model.width;
     uint32_t height = model.height;
 
-    Point start_p{};
+    Point start_p{10, 4};
     draw_preview(width, height, start_p);
     start_p.y += 3;
     draw_frame(width, height, start_p);
@@ -163,6 +177,98 @@ void AsciiView::Impl::draw_preview(uint32_t width, uint32_t height,
     buffer += " S N A K E S ";
     reset_color();
 
+}
+
+void AsciiView::Impl::setup_terminal() {
+    if (terminal_configured) {
+        return;
+    }
+
+    tcgetattr(STDIN_FILENO, &old_term);
+    termios new_term = old_term;
+
+    //new_term.c_lflag &= ~(ICANON | ECHO); 
+    cfmakeraw(&new_term);
+    new_term.c_cc[VMIN] = 0;
+    new_term.c_cc[VTIME] = 0;
+
+    tcsetattr(STDIN_FILENO, TCSANOW, &new_term);
+
+    int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
+    fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
+
+    terminal_configured = true;
+}
+
+void AsciiView::Impl::restore_terminal() {
+    if (!terminal_configured) {
+        return;
+    }
+
+    tcsetattr(STDIN_FILENO, TCSANOW, &old_term);
+
+    int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
+    flags &= ~O_NONBLOCK;
+    fcntl(STDIN_FILENO, F_SETFL, flags);
+
+    terminal_configured = false;
+}
+
+std::optional<Event> AsciiView::Impl::read_key() {
+    char ch;
+    ssize_t n = ::read(STDIN_FILENO, &ch, 1);
+
+    if (n <= 0) {
+        return std::nullopt;
+    }
+
+    switch (ch) {
+        case 'w':
+        case 'W': {
+            return Event{KeyEvents::up};
+            break;
+        }
+
+        case 's':
+        case 'S': {
+            return Event{KeyEvents::down};
+            break;
+        }
+        case 'a':
+        case 'A': {
+            return Event{KeyEvents::left};
+            break;
+        }
+
+        case 'd':
+        case 'D': {
+            return Event{KeyEvents::right};
+            break;
+        }
+
+        case 'p':
+        case 'P': {
+            return Event{KeyEvents::pause};
+            break;
+        }
+
+        case 'r':
+        case 'R': {
+            return Event{KeyEvents::restart};
+            break;
+        }
+
+        case 'q':
+        case 'Q':
+        case 'e':
+        case 'E': {
+            return Event{KeyEvents::exit};
+            break;
+        }
+
+        default:
+            return std::nullopt;
+    }
 }
 
 } // namespace snakes
