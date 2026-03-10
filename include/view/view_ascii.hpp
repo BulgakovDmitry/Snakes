@@ -34,15 +34,16 @@ struct AsciiView::Impl {
     void clear_screen();
     void draw(const GameModel& model);
     void gotoxy(uint32_t x, uint32_t y);
+    void gotoxy(const Point& p);
     void set_color(const int bg_color);
     void reset_color();
 
 private:
     void draw_frame(uint32_t width, uint32_t height, 
-                    uint32_t offset_x, uint32_t offset_y);
+                    Point curr_pos);
 
     void draw_preview(uint32_t width, uint32_t height, 
-                      uint32_t offset_x, uint32_t offset_y);
+                      Point curr_pos);
 };
 
 
@@ -81,22 +82,26 @@ void AsciiView::Impl::gotoxy(uint32_t x, uint32_t y) {
     buffer += "\033[" + std::to_string(y + 1) + ";" + std::to_string(x + 1) + "H";
 }
 
+void AsciiView::Impl::gotoxy(const Point& p) {
+    buffer += "\033[" + std::to_string(p.y + 1) + ";" + std::to_string(p.x + 1) + "H";
+}
+
 void AsciiView::Impl::draw(const GameModel& model) {
     uint32_t width = model.width;
     uint32_t height = model.height;
 
-    uint32_t offset_x = 40, offset_y = 10;
-    draw_preview(width, height, offset_x, offset_y);
-    offset_y += 3;
-    draw_frame(width, height, offset_x, offset_y);
+    Point start_p{};
+    draw_preview(width, height, start_p);
+    start_p.y += 3;
+    draw_frame(width, height, start_p);
 }
 
 void AsciiView::Impl::draw_frame(uint32_t width, uint32_t height, 
-                                 uint32_t offset_x, uint32_t offset_y) {
+                                 Point curr_pos) {
     set_color(fg_black);
     set_color(bg_bright_black);
-    gotoxy(offset_x, offset_y);
-    offset_y ++;
+    gotoxy(curr_pos);
+    ++curr_pos.y;
     buffer += "┏";
     for (uint32_t x = 0; x < width; ++x) {
         buffer += "━";
@@ -104,8 +109,8 @@ void AsciiView::Impl::draw_frame(uint32_t width, uint32_t height,
     buffer += "┓\n";
 
     for (uint32_t y = 0; y < height; ++y) {
-        gotoxy(offset_x, offset_y);
-        offset_y ++;
+        gotoxy(curr_pos);
+        ++curr_pos.y;
         buffer +=  "┃";
         for (uint32_t x = 0; x < width; ++x) {
             set_color(bg_green);
@@ -115,7 +120,7 @@ void AsciiView::Impl::draw_frame(uint32_t width, uint32_t height,
         buffer += "┃\n";
     }
 
-    gotoxy(offset_x, offset_y);
+    gotoxy(curr_pos);
     buffer += "┗";
     for (uint32_t x = 0; x < width; ++x) {
         buffer += "━";
@@ -125,11 +130,11 @@ void AsciiView::Impl::draw_frame(uint32_t width, uint32_t height,
 }
 
 void AsciiView::Impl::draw_preview(uint32_t width, uint32_t height, 
-                      uint32_t offset_x, uint32_t offset_y) {
+                      Point curr_pos) {
     
-    uint32_t start_x = offset_x + width/2 - 6;
+    uint32_t start_x = curr_pos.x + width/2 - 6;
 
-    gotoxy(offset_x, offset_y);
+    gotoxy(curr_pos);
     set_color(bg_green);
     set_color(fg_black);
     buffer += "╔";
@@ -137,24 +142,24 @@ void AsciiView::Impl::draw_preview(uint32_t width, uint32_t height,
         buffer += "═";
     }
     buffer += "╗\n";
-    ++offset_y;
+    ++curr_pos.y;
 
-    gotoxy(offset_x, offset_y);
+    gotoxy(curr_pos);
     buffer +=  "║";
     for (uint32_t x = 0; x < width; ++x) {
         buffer += " ";
     }
     buffer += "║\n";
-    ++offset_y;
+    ++curr_pos.y;
 
-    gotoxy(offset_x, offset_y);
+    gotoxy(curr_pos);
     buffer += "╚";
     for (uint32_t x = 0; x < width; ++x) {
         buffer += "═";
     }
     buffer += "╝\n";
 
-    gotoxy(start_x, offset_y - 1);
+    gotoxy(start_x, curr_pos.y - 1);
     buffer += " S N A K E S ";
     reset_color();
 

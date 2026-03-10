@@ -6,10 +6,46 @@
 namespace snakes {
 
 struct Point {
-    int32_t x, y;
+    uint32_t x{0}, y{0};
+
+    Point() = default;
+    Point(uint32_t x, uint32_t y) : x(x), y(y) {}
 
     bool operator==(const Point& other) const noexcept{
             return x == other.x && y == other.y;
+    }
+
+    Point operator+(const Point& rhs) const noexcept {
+        return {x + rhs.x, y + rhs.y};
+    }
+
+    Point operator-(const Point& rhs) const noexcept {
+        return {x - rhs.x, y - rhs.y};
+    }
+
+    Point operator++() noexcept {
+        ++x;
+        ++y;
+        return *this;
+    }
+
+    Point operator--() noexcept {
+        --x;
+        --y;
+        return *this;
+    }
+
+    Point operator++(int) noexcept {
+        Point temp = *this;
+        ++(*this);
+        return temp;
+    }
+
+
+    Point operator--(int) noexcept {
+        Point temp = *this;
+        --(*this);
+        return temp;
     }
 };
 
