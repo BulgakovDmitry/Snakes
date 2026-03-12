@@ -35,7 +35,7 @@ struct AsciiView::Impl {
     termios old_term{};
     bool terminal_configured{false};
 
-    Impl() { setup_terminal(); }
+    Impl() { setup_terminal() ; }
 
     ~Impl() { restore_terminal(); }
 
@@ -104,10 +104,15 @@ void AsciiView::Impl::draw(const GameModel& model) {
     uint32_t width = model.width;
     uint32_t height = model.height;
 
-    Point start_p{10, 4};
+    Point start_p{20, 8};
     draw_preview(width, height, start_p);
     start_p.y += 3;
     draw_frame(width, height, start_p);
+
+    //gotoxy(start_p + Point{1, 1});
+    // for (auto it = model.snakes.begin(); it != model.snakes.end(); ++it) {
+    //     draw_snake(*it);
+    // }
 }
 
 void AsciiView::Impl::draw_frame(uint32_t width, uint32_t height, 
@@ -187,10 +192,10 @@ void AsciiView::Impl::setup_terminal() {
     tcgetattr(STDIN_FILENO, &old_term);
     termios new_term = old_term;
 
-    //new_term.c_lflag &= ~(ICANON | ECHO); 
-    cfmakeraw(&new_term);
-    new_term.c_cc[VMIN] = 0;
-    new_term.c_cc[VTIME] = 0;
+    new_term.c_lflag &= ~(ICANON | ECHO); 
+    // cfmakeraw(&new_term);
+    // new_term.c_cc[VMIN] = 0;
+    // new_term.c_cc[VTIME] = 0;
 
     tcsetattr(STDIN_FILENO, TCSANOW, &new_term);
 
@@ -206,6 +211,9 @@ void AsciiView::Impl::restore_terminal() {
     }
 
     tcsetattr(STDIN_FILENO, TCSANOW, &old_term);
+
+    // fd_set readset;
+    // select(STDIN_FILENO, &fd_set, timeout);
 
     int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
     flags &= ~O_NONBLOCK;
@@ -269,6 +277,8 @@ std::optional<Event> AsciiView::Impl::read_key() {
         default:
             return std::nullopt;
     }
+
+    return std::nullopt;
 }
 
 } // namespace snakes

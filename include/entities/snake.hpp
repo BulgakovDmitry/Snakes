@@ -8,13 +8,18 @@ namespace snakes {
 class Snake {
 private:
     std::deque<Point> body_{};
-    Direction direction_{Direction::right};
+    Direction direction_;
+
+    Point spawn_point_;
 
 public:
     Snake() = default;
-    Snake(Point start, Direction direction);
+    Snake(Point start, Direction direction = Direction::right) 
+        : spawn_point_(start), direction_(direction) {};
 
     void reset(Point start, Direction direction);
+
+    Point spawn_point() const noexcept;
 
     void set_direction(Direction direction) noexcept;
     Direction direction() const noexcept;
@@ -32,14 +37,18 @@ public:
 // @section Implementations
 // Implementations
 // ----------------------------------------------------------------------------
-inline Snake::Snake(Point start, Direction direction) {
-    reset(start, direction);
-}
+// inline Snake::Snake(Point start, Direction direction = Direction::right) {
+//     reset(start, direction);
+// }
 
 inline void Snake::reset(Point start, Direction direction) {
     body_.clear();
     body_.push_back(start);
     direction_ = direction;
+}
+
+inline Point Snake::spawn_point() const noexcept {
+    return spawn_point_;
 }
 
 inline void Snake::set_direction(Direction direction) noexcept {
