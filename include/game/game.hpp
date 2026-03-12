@@ -44,8 +44,6 @@ void Game::run() {
 }
 
 void Game::process_event() {
-    const auto& event = view_.poll_event();
-
     while (auto event = view_.poll_event()) {
         switch (event->key) {
             case KeyEvents::exit: {

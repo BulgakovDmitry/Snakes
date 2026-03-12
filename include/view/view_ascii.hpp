@@ -21,6 +21,7 @@ public:
     ~AsciiView();
 
     void render(const GameModel& model) override;
+    
     std::optional<Event> poll_event() override;
 
 private:
@@ -35,9 +36,8 @@ struct AsciiView::Impl {
     termios old_term{};
     bool terminal_configured{false};
 
-    Impl() { setup_terminal() ; }
-
-    ~Impl() { restore_terminal(); }
+    Impl();
+    ~Impl();
 
     void clear_screen();
     void draw(const GameModel& model);
@@ -45,7 +45,6 @@ struct AsciiView::Impl {
     void gotoxy(const Point& p);
     void set_color(const int bg_color);
     void reset_color();
-
 
     std::optional<Event> read_key();
 
@@ -78,6 +77,14 @@ void AsciiView::render(const GameModel& model) {
 
 std::optional<Event> AsciiView::poll_event() {
     return impl_->read_key();
+}
+
+AsciiView::Impl::Impl() {
+    setup_terminal();
+}
+
+AsciiView::Impl::~Impl() {
+    restore_terminal();
 }
 
 void AsciiView::Impl::clear_screen() {
@@ -193,9 +200,6 @@ void AsciiView::Impl::setup_terminal() {
     termios new_term = old_term;
 
     new_term.c_lflag &= ~(ICANON | ECHO); 
-    // cfmakeraw(&new_term);
-    // new_term.c_cc[VMIN] = 0;
-    // new_term.c_cc[VTIME] = 0;
 
     tcsetattr(STDIN_FILENO, TCSANOW, &new_term);
 
@@ -212,9 +216,6 @@ void AsciiView::Impl::restore_terminal() {
 
     tcsetattr(STDIN_FILENO, TCSANOW, &old_term);
 
-    // fd_set readset;
-    // select(STDIN_FILENO, &fd_set, timeout);
-
     int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
     flags &= ~O_NONBLOCK;
     fcntl(STDIN_FILENO, F_SETFL, flags);
@@ -224,7 +225,7 @@ void AsciiView::Impl::restore_terminal() {
 
 std::optional<Event> AsciiView::Impl::read_key() {
     char ch;
-    ssize_t n = ::read(STDIN_FILENO, &ch, 1);
+    const ssize_t n = ::read(STDIN_FILENO, &ch, 1);
 
     if (n <= 0) {
         return std::nullopt;
