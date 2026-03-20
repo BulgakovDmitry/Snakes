@@ -57,6 +57,9 @@ private:
 
     void draw_preview(uint32_t width, uint32_t height, 
                       Point curr_pos);
+
+    void draw_rabbits(const GameModel& model);
+    
 };
 
 
@@ -64,10 +67,10 @@ private:
 // @section Implementations
 // Implementations
 // ----------------------------------------------------------------------------
-AsciiView::AsciiView() : impl_(std::make_unique<Impl>()) {}
-AsciiView::~AsciiView() = default;
+inline AsciiView::AsciiView() : impl_(std::make_unique<Impl>()) {}
+inline AsciiView::~AsciiView() = default;
 
-void AsciiView::render(const GameModel& model) {
+inline void AsciiView::render(const GameModel& model) {
     impl_->buffer.clear();
     impl_->clear_screen();
     impl_->draw(model);
@@ -75,54 +78,62 @@ void AsciiView::render(const GameModel& model) {
     impl_->out.flush();
 }
 
-std::optional<Event> AsciiView::poll_event() {
+inline std::optional<Event> AsciiView::poll_event() {
     return impl_->read_key();
 }
 
-AsciiView::Impl::Impl() {
+inline AsciiView::Impl::Impl() {
     setup_terminal();
 }
 
-AsciiView::Impl::~Impl() {
+inline AsciiView::Impl::~Impl() {
     restore_terminal();
 }
 
-void AsciiView::Impl::clear_screen() {
+inline void AsciiView::Impl::clear_screen() {
     buffer+="\033[H";
 }
 
-void AsciiView::Impl::set_color(const int bg_color) {
+inline void AsciiView::Impl::set_color(const int bg_color) {
     buffer += "\033[" + std::to_string(bg_color) + "m";
 }
 
-void AsciiView::Impl::reset_color() {
+inline void AsciiView::Impl::reset_color() {
     set_color(ansi_reset);
 }
 
-void AsciiView::Impl::gotoxy(uint32_t x, uint32_t y) {
+inline void AsciiView::Impl::gotoxy(uint32_t x, uint32_t y) {
     buffer += "\033[" + std::to_string(y + 1) + ";" + std::to_string(x + 1) + "H";
 }
 
-void AsciiView::Impl::gotoxy(const Point& p) {
+inline void AsciiView::Impl::gotoxy(const Point& p) {
     buffer += "\033[" + std::to_string(p.y + 1) + ";" + std::to_string(p.x + 1) + "H";
 }
 
-void AsciiView::Impl::draw(const GameModel& model) {
+inline void AsciiView::Impl::draw(const GameModel& model) { //TODO create draw_full
     uint32_t width = model.width;
     uint32_t height = model.height;
 
-    Point start_p{20, 8};
+    Point start_p = model.start_point;
     draw_preview(width, height, start_p);
     start_p.y += 3;
     draw_frame(width, height, start_p);
 
-    //gotoxy(start_p + Point{1, 1});
-    // for (auto it = model.snakes.begin(); it != model.snakes.end(); ++it) {
-    //     draw_snake(*it);
-    // }
+    draw_rabbits(model);
+   
+    gotoxy(0, 0);
 }
 
-void AsciiView::Impl::draw_frame(uint32_t width, uint32_t height, 
+inline void AsciiView::Impl::draw_rabbits(const GameModel& model) {  
+    for (const auto& rabbit : model.rabbits) {
+        gotoxy(rabbit.position());
+        set_color(bg_green);
+        buffer += "¤";
+        reset_color();
+    }
+}
+
+inline void AsciiView::Impl::draw_frame(uint32_t width, uint32_t height, 
                                  Point curr_pos) {
     set_color(fg_black);
     set_color(bg_bright_black);
@@ -155,7 +166,7 @@ void AsciiView::Impl::draw_frame(uint32_t width, uint32_t height,
     reset_color();
 }
 
-void AsciiView::Impl::draw_preview(uint32_t width, uint32_t height, 
+inline void AsciiView::Impl::draw_preview(uint32_t width, uint32_t height, 
                       Point curr_pos) {
     
     uint32_t start_x = curr_pos.x + width/2 - 6;
@@ -191,7 +202,7 @@ void AsciiView::Impl::draw_preview(uint32_t width, uint32_t height,
 
 }
 
-void AsciiView::Impl::setup_terminal() {
+inline void AsciiView::Impl::setup_terminal() {
     if (terminal_configured) {
         return;
     }
@@ -209,7 +220,7 @@ void AsciiView::Impl::setup_terminal() {
     terminal_configured = true;
 }
 
-void AsciiView::Impl::restore_terminal() {
+inline void AsciiView::Impl::restore_terminal() {
     if (!terminal_configured) {
         return;
     }
@@ -223,7 +234,7 @@ void AsciiView::Impl::restore_terminal() {
     terminal_configured = false;
 }
 
-std::optional<Event> AsciiView::Impl::read_key() {
+inline std::optional<Event> AsciiView::Impl::read_key() {
     char ch;
     const ssize_t n = ::read(STDIN_FILENO, &ch, 1);
 

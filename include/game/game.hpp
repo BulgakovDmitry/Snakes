@@ -15,6 +15,7 @@ private:
     IView& view_;
 
     bool running_{true};
+    bool paused_{false};
 
 public:
     Game(GameModel& model, IView& view);
@@ -30,20 +31,27 @@ private:
 // @section Implementations
 // Implementations
 // ----------------------------------------------------------------------------
-Game::Game(GameModel& model, IView& view)
+inline Game::Game(GameModel& model, IView& view)
     : model_(model), view_(view) {}
 
 
-void Game::run() {
+inline void Game::run() {
     while (running_) {
         // std::cout << "Running game loop..." << std::endl;
         process_event();
+
+        if(!paused_)
+            model_.update();
+
+        //  -> 1) update data 2) track visual changes
+        // list<updates>
+        //     coord, symbol, color
         view_.render(model_);
-        std::this_thread::sleep_for(std::chrono::milliseconds(40));
+        std::this_thread::sleep_for(std::chrono::milliseconds(40)); 
     }
 }
 
-void Game::process_event() {
+inline void Game::process_event() {
     while (auto event = view_.poll_event()) {
         switch (event->key) {
             case KeyEvents::exit: {
@@ -57,7 +65,7 @@ void Game::process_event() {
             }
             case KeyEvents::pause: {
                 std::cout << "Pausing game..." << std::endl;
-                // TODO: implement pause logic
+                paused_ = !paused_;
                 break;
             }
             case KeyEvents::up: {

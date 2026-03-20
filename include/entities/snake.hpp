@@ -9,17 +9,12 @@ class Snake {
 private:
     std::deque<Point> body_{};
     Direction direction_;
-
-    Point spawn_point_;
+    int32_t color;
 
 public:
     Snake() = default;
-    Snake(Point start, Direction direction = Direction::right) 
-        : spawn_point_(start), direction_(direction) {};
-
-    void reset(Point start, Direction direction);
-
-    Point spawn_point() const noexcept;
+    Snake(int32_t color, Direction direction = Direction::right) 
+        : color(color), direction_(direction) {};
 
     void set_direction(Direction direction) noexcept;
     Direction direction() const noexcept;
@@ -27,30 +22,13 @@ public:
     Point head() const noexcept;
     const std::deque<Point>& body() const noexcept;
 
-    bool located_on(Point point) const noexcept;
-    bool hits_itself() const noexcept;
-
-    void move(bool grow = false);
+    void move();
 };
 
 // ----------------------------------------------------------------------------
 // @section Implementations
 // Implementations
 // ----------------------------------------------------------------------------
-// inline Snake::Snake(Point start, Direction direction = Direction::right) {
-//     reset(start, direction);
-// }
-
-inline void Snake::reset(Point start, Direction direction) {
-    body_.clear();
-    body_.push_back(start);
-    direction_ = direction;
-}
-
-inline Point Snake::spawn_point() const noexcept {
-    return spawn_point_;
-}
-
 inline void Snake::set_direction(Direction direction) noexcept {
     if (!is_opposite(direction_, direction)) {
         direction_ = direction;
@@ -63,32 +41,30 @@ inline Point Snake::head() const noexcept { return body_.front(); }
 
 inline const std::deque<Point>& Snake::body() const noexcept { return body_; }
 
-inline bool Snake::located_on(Point point) const noexcept {
-    for (const auto& body_segment : body_) {
-        if (body_segment == point) {
-            return true;
+inline void Snake::move() {
+    switch (direction_) {
+        case Direction::up: {
+            body_.push_front(head() + Point{0, -1});
+            break;
         }
-    }
-    return false;
-}
-
-inline bool Snake::hits_itself() const noexcept {
-    if (body_.size() < 2) return false;
-
-    const Point head_point = head();
-    for (size_t i = 1; i < body_.size(); ++i) {
-        if (body_[i] == head_point) {
-            return true;
+        case Direction::down: {
+            body_.push_front(head() + Point{0, 1});
+            break;
         }
-    }
-    return false;
-}
+        case Direction::left: {
+            body_.push_front(head() + Point{-1, 0});
+            break;
+        }
+        case Direction::right: {
+            body_.push_front(head() + Point{1, 0});
+            break;  
+            break;
+        }
+        default:
+            throw std::runtime_error("Invalid direction");
 
-inline void Snake::move(bool grow) {
-    body_.push_front(next_point(head(), direction_));
-    if (!grow) {
-        body_.pop_back();
     }
+    body_.pop_back();
 }
 
 } // namespace snakes
