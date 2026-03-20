@@ -275,26 +275,30 @@ inline std::optional<Event> AsciiView::Impl::read_key() {
     switch (ch) {
         case 'w':
         case 'W': {
-            return Event{KeyEvents::up};
+            return Event{KeyEvents::up_1};
             break;
         }
 
         case 's':
         case 'S': {
-            return Event{KeyEvents::down};
+            return Event{KeyEvents::down_1};
             break;
         }
         case 'a':
         case 'A': {
-            return Event{KeyEvents::left};
+            return Event{KeyEvents::left_1};
             break;
         }
 
         case 'd':
         case 'D': {
-            return Event{KeyEvents::right};
+            return Event{KeyEvents::right_1};
             break;
         }
+
+        
+
+     
 
         case 'p':
         case 'P': {
@@ -314,6 +318,28 @@ inline std::optional<Event> AsciiView::Impl::read_key() {
         case 'E': {
             return Event{KeyEvents::exit};
             break;
+        }
+
+        case '\x1b': { 
+            char seq[2];
+            const ssize_t n1 = ::read(STDIN_FILENO, &seq[0], 1);
+            const ssize_t n2 = ::read(STDIN_FILENO, &seq[1], 1);
+
+            if (n1 <= 0 || n2 <= 0) {
+                return std::nullopt;
+            }
+
+            if (seq[0] == '[') {
+                switch (seq[1]) {
+                    case 'A': return Event{KeyEvents::up_2};    
+                    case 'B': return Event{KeyEvents::down_2};  
+                    case 'C': return Event{KeyEvents::right_2}; 
+                    case 'D': return Event{KeyEvents::left_2};  
+                    default:  return std::nullopt;
+                }
+            }
+
+            return std::nullopt;
         }
 
         default:

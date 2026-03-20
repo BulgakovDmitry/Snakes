@@ -57,34 +57,45 @@ inline void Game::process_event() {
             }
             case KeyEvents::restart: {
                 // std::cout << "Restarting game..." << std::endl;
-                // TODO: implement restart logic
                 break;
             }
             case KeyEvents::pause: {
-                // std::cout << "Pausing game..." << std::endl;
                 paused_ = !paused_;
                 break;
             }
-            case KeyEvents::up: {
-                // std::cout << "Moving up..." << std::endl;
+            case KeyEvents::up_1: {
                 model_.snakes.front().set_direction(Direction::up);
                 break;
             }
-            case KeyEvents::down: {
-                // std::cout << "Moving down..." << std::endl;
+            case KeyEvents::down_1: {
                 model_.snakes.front().set_direction(Direction::down);
                 break;
             }
-            case KeyEvents::left: {
-                // std::cout << "Moving left..." << std::endl; 
+            case KeyEvents::left_1: {
                 model_.snakes.front().set_direction(Direction::left);
                 break;
             }
-            case KeyEvents::right: {
-                // std::cout << "Moving right..." << std::endl;
+            case KeyEvents::right_1: {
                 model_.snakes.front().set_direction(Direction::right);
                 break;
             }
+            case KeyEvents::up_2: {
+                model_.snakes.back().set_direction(Direction::up);
+                break;
+            }
+            case KeyEvents::down_2: {
+                model_.snakes.back().set_direction(Direction::down);
+                break;
+            }
+            case KeyEvents::left_2: {
+                model_.snakes.back().set_direction(Direction::left);
+                break;
+            }
+            case KeyEvents::right_2: {  
+                model_.snakes.back().set_direction(Direction::right);
+                break;
+            }
+            
             default: {
                 throw std::runtime_error("Unsupported event");
             }

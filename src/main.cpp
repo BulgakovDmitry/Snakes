@@ -7,11 +7,20 @@ int main() {
     snakes::GameModel model{};
     snakes::AsciiView view{};
 
-    snakes::Snake snake{};
-    model.snakes.push_back(snake);
+    snakes::Snake snake_1 = snakes::Snake::Builder()
+        .set_color(fg_red)
+        .set_direction(snakes::Direction::right)
+        .set_spawn_point({4, 4})
+        .build();
+    model.snakes.push_back(snake_1);
 
-    // snakes::Rabbit rabbit(snakes::Point{22, 12});
-    // model.rabbits.push_back(rabbit);
+
+    snakes::Snake snake_2 = snakes::Snake::Builder()
+        .set_color(fg_blue)
+        .set_direction(snakes::Direction::left)
+        .set_spawn_point({20, 20})
+        .build();
+    //model.snakes.push_back(snake_2);
 
     std::cout << "Welcome to Snakes!" << std::endl;
 

@@ -8,21 +8,15 @@ namespace snakes {
 
 class Snake {
 private:
-    std::deque<Point> body_{};
+    std::deque<Point> body_;
     Direction direction_;
     int32_t color_;
-    Point spawn_point{};
+    Point spawn_point;
 
 public:
-    Snake(int32_t color = fg_red,
-      Direction direction = Direction::right,
-      Point spawn_point = {4, 4})
-    : direction_(direction), color_(color), spawn_point(spawn_point)
-    {
-        body_.push_back(spawn_point);
-        body_.push_back(spawn_point - Point{1, 0});
-        body_.push_back(spawn_point - Point{2, 0});
-    }
+    Snake(int32_t color, Direction direction, Point spawn_point);
+
+    struct Builder;
 
     void set_direction(Direction direction) noexcept;
     Direction direction() const noexcept;
@@ -40,6 +34,14 @@ public:
 // @section Implementations
 // Implementations
 // ----------------------------------------------------------------------------
+inline Snake::Snake(int32_t color, Direction direction, Point spawn_point)
+  : direction_(direction), color_(color), spawn_point(spawn_point)
+    {
+        body_.push_back(spawn_point);
+        body_.push_back(spawn_point - Point{1, 0});
+        body_.push_back(spawn_point - Point{2, 0});
+    }
+
 inline void Snake::set_direction(Direction direction) noexcept {
     if (!is_opposite(direction_, direction)) {
         direction_ = direction;
@@ -88,5 +90,28 @@ inline void Snake::move() {
     }
     body_.pop_back();
 }
+
+struct Snake::Builder {
+    Direction direction{Direction::right};
+    int32_t color{fg_red};
+    Point spawn_point{4, 4};
+
+    Builder& set_direction(Direction dir) {
+        direction = dir;
+        return *this;
+    }
+    Builder& set_color(int32_t c) {
+        color = c;
+        return *this;
+    }
+    Builder& set_spawn_point(Point p) {
+        spawn_point = p;
+        return *this;
+    }
+
+    Snake build() const {
+        return Snake(color, direction, spawn_point);
+    }
+};
 
 } // namespace snakes
