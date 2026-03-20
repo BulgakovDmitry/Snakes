@@ -296,10 +296,6 @@ inline std::optional<Event> AsciiView::Impl::read_key() {
             break;
         }
 
-        
-
-     
-
         case 'p':
         case 'P': {
             return Event{KeyEvents::pause};

@@ -11,11 +11,12 @@ private:
     std::deque<Point> body_;
     Direction direction_;
     int32_t color_;
-    Point spawn_point;
+    Point spawn_point_;
+    bool human_controlled_;
 
 public:
-    Snake(int32_t color, Direction direction, Point spawn_point);
 
+    Snake(int32_t color, Direction direction, Point spawn_point_);
     struct Builder;
 
     void set_direction(Direction direction) noexcept;
@@ -35,11 +36,11 @@ public:
 // Implementations
 // ----------------------------------------------------------------------------
 inline Snake::Snake(int32_t color, Direction direction, Point spawn_point)
-  : direction_(direction), color_(color), spawn_point(spawn_point)
+  : direction_(direction), color_(color), spawn_point_(spawn_point)
     {
         body_.push_back(spawn_point);
-        body_.push_back(spawn_point - Point{1, 0});
-        body_.push_back(spawn_point - Point{2, 0});
+        body_.push_front(spawn_point + Point{1, 0});
+        body_.push_front(spawn_point + Point{2, 0});
     }
 
 inline void Snake::set_direction(Direction direction) noexcept {
@@ -94,23 +95,28 @@ inline void Snake::move() {
 struct Snake::Builder {
     Direction direction{Direction::right};
     int32_t color{fg_red};
-    Point spawn_point{4, 4};
+    Point spawn_point_{4, 4};
+    bool human_controlled_{false};
 
-    Builder& set_direction(Direction dir) {
+    Builder& set_direction(const Direction dir) {
         direction = dir;
         return *this;
     }
-    Builder& set_color(int32_t c) {
+    Builder& set_color(const int32_t c) {
         color = c;
         return *this;
     }
-    Builder& set_spawn_point(Point p) {
-        spawn_point = p;
+    Builder& set_spawn_point(const Point p) {
+        spawn_point_ = p;
+        return *this;
+    }
+    Builder& set_human_controlled(const bool hc) {
+        human_controlled_ = hc;
         return *this;
     }
 
     Snake build() const {
-        return Snake(color, direction, spawn_point);
+        return Snake(color, direction, spawn_point_);
     }
 };
 

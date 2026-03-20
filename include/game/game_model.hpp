@@ -6,20 +6,24 @@
 #include <algorithm>
 #include <list>
 #include <vector>
+#include <unordered_map>
 #include "entities/snake.hpp"
 #include "entities/rabbit.hpp"
 
 namespace snakes {
 
 struct GameModel {
+
     uint32_t width;
     uint32_t height;
 
     Point start_point{2, 2};
+    
+    std::list<Snake>  snakes{};
+    std::list<Rabbit> rabbits{}; 
+    std::vector<Snake> human_snakes{};
 
-    std::list<Snake> snakes{};
-    std::list<Rabbit> rabbits{};
-
+    // TODO: builder with insertion human_snakes
     bool game_over{false};
     int score{0};
 
@@ -28,10 +32,14 @@ struct GameModel {
     static constexpr std::size_t max_rabbits = 3;
 
     void update(); // split to steps
-    
+
+private: 
     std::vector<Point> generate_rabbits_coords() const;
     void update_rabbits();
     void update_snakes();
+
+    std::vector<Snake> check_collisions() const;
+    void remove_crashed_snakes();
 
 };
 
@@ -40,13 +48,7 @@ struct GameModel {
 // Implementations
 // ----------------------------------------------------------------------------
 inline void GameModel::update() {
-    if (game_over) {
-        return;
-    }
-
-    // for (Snake& snake : snakes) {
-    //     snake.move();
-    // }
+    if (game_over) return;
 
     update_snakes();
     update_rabbits();
@@ -66,7 +68,7 @@ inline void GameModel::update_snakes() {
     }
 }
 
-std::vector<Point> GameModel::generate_rabbits_coords() const {
+inline std::vector<Point> GameModel::generate_rabbits_coords() const {
     if (rabbits.size() >= max_rabbits) {
         return {};
     }
@@ -125,6 +127,5 @@ std::vector<Point> GameModel::generate_rabbits_coords() const {
 
     return std::vector<Point>(free_cells.begin(), free_cells.begin() + need);
 }
-
 
 } // namespace snakes
