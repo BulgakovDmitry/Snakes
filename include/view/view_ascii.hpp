@@ -59,7 +59,8 @@ private:
                       Point curr_pos);
 
     void draw_rabbits(const GameModel& model);
-    
+
+    void draw_snakes(const GameModel& model);  
 };
 
 
@@ -120,6 +121,7 @@ inline void AsciiView::Impl::draw(const GameModel& model) { //TODO create draw_f
     draw_frame(width, height, start_p);
 
     draw_rabbits(model);
+    draw_snakes(model);
    
     gotoxy(0, 0);
 }
@@ -130,6 +132,34 @@ inline void AsciiView::Impl::draw_rabbits(const GameModel& model) {
         set_color(bg_green);
         buffer += "¤";
         reset_color();
+    }
+}
+
+inline void AsciiView::Impl::draw_snakes(const GameModel& model) {  
+    for (const Snake& snake : model.snakes) {
+        const auto& body = snake.body();
+
+        if (body.empty()) {
+            continue;
+        }
+
+        bool is_head = true;
+        for (const Point& segment : body) {
+            gotoxy(segment);
+
+            if (is_head) {
+                set_color(snake.color());  
+                set_color(bg_green);
+                buffer += "@";
+                reset_color();
+                is_head = false;
+            } else {
+                set_color(snake.color());  
+                set_color(bg_green); 
+                buffer += "o";
+                reset_color();
+            }
+        }
     }
 }
 

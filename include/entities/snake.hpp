@@ -2,6 +2,7 @@
 
 #include <deque>
 #include "core/types.hpp"
+#include "view/colors.hpp"
 
 namespace snakes {
 
@@ -9,18 +10,28 @@ class Snake {
 private:
     std::deque<Point> body_{};
     Direction direction_;
-    int32_t color;
+    int32_t color_;
+    Point spawn_point{};
 
 public:
-    Snake() = default;
-    Snake(int32_t color, Direction direction = Direction::right) 
-        : color(color), direction_(direction) {};
+    Snake(int32_t color = fg_red,
+      Direction direction = Direction::right,
+      Point spawn_point = {4, 4})
+    : direction_(direction), color_(color), spawn_point(spawn_point)
+    {
+        body_.push_back(spawn_point);
+        body_.push_back(spawn_point - Point{1, 0});
+        body_.push_back(spawn_point - Point{2, 0});
+    }
 
     void set_direction(Direction direction) noexcept;
     Direction direction() const noexcept;
 
+    bool located_on(Point point) const noexcept;
+
     Point head() const noexcept;
     const std::deque<Point>& body() const noexcept;
+    int32_t color() const noexcept;
 
     void move();
 };
@@ -35,11 +46,22 @@ inline void Snake::set_direction(Direction direction) noexcept {
     }
 }
 
+inline bool Snake::located_on(Point point) const noexcept {
+    for (const auto& body_segment : body_) {
+        if (body_segment == point) {
+            return true;
+        }
+    }
+    return false;
+}
+
 inline Direction Snake::direction() const noexcept { return direction_; }
 
 inline Point Snake::head() const noexcept { return body_.front(); }
 
 inline const std::deque<Point>& Snake::body() const noexcept { return body_; }
+
+inline int32_t Snake::color() const noexcept { return color_; }
 
 inline void Snake::move() {
     switch (direction_) {

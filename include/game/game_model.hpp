@@ -31,6 +31,7 @@ struct GameModel {
     
     std::vector<Point> generate_rabbits_coords() const;
     void update_rabbits();
+    void update_snakes();
 
 };
 
@@ -47,6 +48,7 @@ inline void GameModel::update() {
     //     snake.move();
     // }
 
+    update_snakes();
     update_rabbits();
 }
 
@@ -55,6 +57,12 @@ inline void GameModel::update_rabbits() {
 
     for (const Point& pos : new_coords) {
         rabbits.emplace_back(pos);
+    }
+}
+
+inline void GameModel::update_snakes() {
+    for (Snake& snake : snakes) {
+        snake.move();
     }
 }
 

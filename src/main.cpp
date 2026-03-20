@@ -7,8 +7,8 @@ int main() {
     snakes::GameModel model{};
     snakes::AsciiView view{};
 
-    // snakes::Snake snake(snakes::Point{22, 10}, snakes::Direction::right);
-    // model.snakes.push_back(snake);
+    snakes::Snake snake{};
+    model.snakes.push_back(snake);
 
     // snakes::Rabbit rabbit(snakes::Point{22, 12});
     // model.rabbits.push_back(rabbit);
@@ -16,7 +16,6 @@ int main() {
     std::cout << "Welcome to Snakes!" << std::endl;
 
     snakes::Game game(model, view);
-
 
     game.run();
 }

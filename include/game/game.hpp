@@ -43,11 +43,8 @@ inline void Game::run() {
         if(!paused_)
             model_.update();
 
-        //  -> 1) update data 2) track visual changes
-        // list<updates>
-        //     coord, symbol, color
         view_.render(model_);
-        std::this_thread::sleep_for(std::chrono::milliseconds(40)); 
+        std::this_thread::sleep_for(std::chrono::milliseconds(90)); 
     }
 }
 
@@ -59,33 +56,33 @@ inline void Game::process_event() {
                 break;
             }
             case KeyEvents::restart: {
-                std::cout << "Restarting game..." << std::endl;
+                // std::cout << "Restarting game..." << std::endl;
                 // TODO: implement restart logic
                 break;
             }
             case KeyEvents::pause: {
-                std::cout << "Pausing game..." << std::endl;
+                // std::cout << "Pausing game..." << std::endl;
                 paused_ = !paused_;
                 break;
             }
             case KeyEvents::up: {
-                std::cout << "Moving up..." << std::endl;
-                // TODO: implement move up logic
+                // std::cout << "Moving up..." << std::endl;
+                model_.snakes.front().set_direction(Direction::up);
                 break;
             }
             case KeyEvents::down: {
-                std::cout << "Moving down..." << std::endl;
-                // TODO: implement move down logic
+                // std::cout << "Moving down..." << std::endl;
+                model_.snakes.front().set_direction(Direction::down);
                 break;
             }
             case KeyEvents::left: {
-                std::cout << "Moving left..." << std::endl; 
-                // TODO: implement move left logic
+                // std::cout << "Moving left..." << std::endl; 
+                model_.snakes.front().set_direction(Direction::left);
                 break;
             }
             case KeyEvents::right: {
-                std::cout << "Moving right..." << std::endl;
-                // TODO: implement move right logic
+                // std::cout << "Moving right..." << std::endl;
+                model_.snakes.front().set_direction(Direction::right);
                 break;
             }
             default: {
