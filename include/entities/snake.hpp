@@ -13,10 +13,10 @@ private:
     int32_t color_;
     Point spawn_point_;
     bool human_controlled_;
-
+    
 public:
 
-    Snake(int32_t color, Direction direction, Point spawn_point_);
+    Snake(int32_t color, Direction direction, Point spawn_point_, bool human_controlled);
     struct Builder;
 
     void set_direction(Direction direction) noexcept;
@@ -26,7 +26,9 @@ public:
 
     Point head() const noexcept;
     const std::deque<Point>& body() const noexcept;
+    std::deque<Point>& body() noexcept;
     int32_t color() const noexcept;
+    bool is_human_controlled() const noexcept;
 
     void move();
 };
@@ -35,8 +37,8 @@ public:
 // @section Implementations
 // Implementations
 // ----------------------------------------------------------------------------
-inline Snake::Snake(int32_t color, Direction direction, Point spawn_point)
-  : direction_(direction), color_(color), spawn_point_(spawn_point)
+inline Snake::Snake(int32_t color, Direction direction, Point spawn_point, bool human_controlled)
+  : direction_(direction), color_(color), spawn_point_(spawn_point), human_controlled_(human_controlled)
     {
         body_.push_back(spawn_point);
         body_.push_front(spawn_point + Point{1, 0});
@@ -63,8 +65,11 @@ inline Direction Snake::direction() const noexcept { return direction_; }
 inline Point Snake::head() const noexcept { return body_.front(); }
 
 inline const std::deque<Point>& Snake::body() const noexcept { return body_; }
+inline std::deque<Point>& Snake::body() noexcept { return body_; }
 
 inline int32_t Snake::color() const noexcept { return color_; }
+
+inline bool Snake::is_human_controlled() const noexcept { return human_controlled_; }
 
 inline void Snake::move() {
     switch (direction_) {
@@ -116,7 +121,7 @@ struct Snake::Builder {
     }
 
     Snake build() const {
-        return Snake(color, direction, spawn_point_);
+        return Snake(color, direction, spawn_point_, human_controlled_);
     }
 };
 

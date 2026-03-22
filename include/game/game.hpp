@@ -32,7 +32,13 @@ private:
 // Implementations
 // ----------------------------------------------------------------------------
 inline Game::Game(GameModel& model, IView& view)
-    : model_(model), view_(view) {}
+    : model_(model), view_(view) {
+        for (auto& snake : model_.snakes) {
+             if (snake.is_human_controlled()) {
+                model_.human_snakes.push_back(snake);
+            }
+        }
+    }
 
 
 inline void Game::run() {
@@ -64,35 +70,51 @@ inline void Game::process_event() {
                 break;
             }
             case KeyEvents::up_1: {
-                model_.snakes.front().set_direction(Direction::up);
+                if (model_.human_snakes.size() > 0) {
+                    model_.human_snakes[0].get().set_direction(Direction::up);
+                }
                 break;
             }
             case KeyEvents::down_1: {
-                model_.snakes.front().set_direction(Direction::down);
+                if (model_.human_snakes.size() > 0) {
+                    model_.human_snakes[0].get().set_direction(Direction::down);
+                }
                 break;
             }
             case KeyEvents::left_1: {
-                model_.snakes.front().set_direction(Direction::left);
+                if (model_.human_snakes.size() > 0) {
+                    model_.human_snakes[0].get().set_direction(Direction::left);
+                }
                 break;
             }
             case KeyEvents::right_1: {
-                model_.snakes.front().set_direction(Direction::right);
+                if (model_.human_snakes.size() > 0) {
+                    model_.human_snakes[0].get().set_direction(Direction::right);
+                }
                 break;
             }
             case KeyEvents::up_2: {
-                model_.snakes.back().set_direction(Direction::up);
+                if (model_.human_snakes.size() > 1) {
+                    model_.human_snakes[1].get().set_direction(Direction::up);
+                }
                 break;
             }
             case KeyEvents::down_2: {
-                model_.snakes.back().set_direction(Direction::down);
+                if (model_.human_snakes.size() > 1) {
+                    model_.human_snakes[1].get().set_direction(Direction::down);
+                }
                 break;
             }
             case KeyEvents::left_2: {
-                model_.snakes.back().set_direction(Direction::left);
+                if (model_.human_snakes.size() > 1) {
+                    model_.human_snakes[1].get().set_direction(Direction::left);
+                }
                 break;
             }
             case KeyEvents::right_2: {  
-                model_.snakes.back().set_direction(Direction::right);
+                if (model_.human_snakes.size() > 1) {
+                    model_.human_snakes[1].get().set_direction(Direction::right);
+                }
                 break;
             }
             
