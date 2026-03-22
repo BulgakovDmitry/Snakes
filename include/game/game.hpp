@@ -16,8 +16,10 @@ private:
 
     bool running_{true};
     bool paused_{false};
-
+    
 public:
+    bool restart_{false};
+    
     Game(GameModel& model, IView& view);
 
     void run();
@@ -42,6 +44,7 @@ inline Game::Game(GameModel& model, IView& view)
 
 
 inline void Game::run() {
+    running_ = true;
     while (running_) {
         // std::cout << "Running game loop..." << std::endl;
         process_event();
@@ -62,7 +65,9 @@ inline void Game::process_event() {
                 break;
             }
             case KeyEvents::restart: {
-                // std::cout << "Restarting game..." << std::endl;
+                std::cout << "Restarting game..." << std::endl;
+                restart_ = true;
+                //run();
                 break;
             }
             case KeyEvents::pause: {

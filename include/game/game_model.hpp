@@ -25,7 +25,6 @@ struct GameModel {
     std::vector<std::reference_wrapper<Snake>> human_snakes{};
 
     // TODO: builder with insertion human_snakes
-    bool game_over{false};
     int score{0};
 
     GameModel(uint32_t w = 80, uint32_t h = 20) : width(w), height(h) {}
@@ -45,6 +44,7 @@ private:
     std::pair<bool, std::list<Rabbit>::const_iterator> has_eaten_rabbit(const Snake& snake) const;
     void eat_rabbit(Snake& snake, std::list<Rabbit>::const_iterator rabbit_it);
     void try_eat_rabbit();
+
 };
 
 // ----------------------------------------------------------------------------
@@ -52,8 +52,6 @@ private:
 // Implementations
 // ----------------------------------------------------------------------------
 inline void GameModel::update() {
-    if (game_over) return;
-
     update_snakes();
     update_rabbits();
     remove_crashed_snakes();
@@ -149,11 +147,8 @@ inline std::vector<std::list<Snake>::const_iterator> GameModel::check_collisions
         }
 
         // Check collision with itself
-        for (const Point& segment : it1->body()) {
-            if (segment == head) {
-                continue; // Skip the head
-            }
-            if (segment == head) {
+        for (std::size_t i = 1; i < it1->body().size(); ++i) {
+            if (it1->body()[i] == head) {
                 crashed_snakes.push_back(it1);
                 break;
             }
@@ -162,7 +157,7 @@ inline std::vector<std::list<Snake>::const_iterator> GameModel::check_collisions
         // Check collision with other snakes
         for (auto it2 = snakes.begin(); it2 != snakes.end(); ++it2) {
             if (it1 == it2) {
-                continue; // Skip self
+                continue;
             }
             for (const Point& segment : it2->body()) {
                 if (segment == head) {
@@ -180,10 +175,6 @@ inline void GameModel::remove_crashed_snakes() {
 
     for (const auto& it : crashed_snakes) {
         snakes.erase(it);
-    }
-
-    if (snakes.empty()) {
-        game_over = true;
     }
 }
 
@@ -212,5 +203,6 @@ inline void GameModel::try_eat_rabbit() {
         }
     }
 }
+
 
 } // namespace snakes
