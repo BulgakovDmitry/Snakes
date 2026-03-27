@@ -15,15 +15,15 @@ int main() {
         .build();
     model.snakes.push_back(snake_1);
 
-    // snakes::Snake snake_2 = snakes::Snake::Builder()
-    //     .set_color(fg_blue)
-    //     .set_direction(snakes::Direction::left)
-    //     .set_spawn_point({20, 20})
-    //     .set_human_controlled(true)
-    //     .build();
-    // model.snakes.push_back(snake_2);
+    snakes::Snake snake_2 = snakes::Snake::Builder()
+        .set_color(fg_blue)
+        .set_direction(snakes::Direction::right)
+        .set_spawn_point({4, 8})
+        .set_human_controlled(true)
+        .build();
+    model.snakes.push_back(snake_2);
 
-    std::cout << "Welcome to Snakes!" << std::endl;
+    //std::cout << "Welcome to Snakes!" << std::endl;
 
     snakes::Game game(model, view);
 

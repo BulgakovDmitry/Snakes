@@ -19,7 +19,7 @@ private:
     
 public:
     bool restart_{false};
-    
+
     Game(GameModel& model, IView& view);
 
     void run();
@@ -48,11 +48,11 @@ inline void Game::run() {
     while (running_) {
         // std::cout << "Running game loop..." << std::endl;
         process_event();
+        view_.render(model_);
 
         if(!paused_)
             model_.update();
 
-        view_.render(model_);
         std::this_thread::sleep_for(std::chrono::milliseconds(90)); 
     }
 }
@@ -65,7 +65,6 @@ inline void Game::process_event() {
                 break;
             }
             case KeyEvents::restart: {
-                std::cout << "Restarting game..." << std::endl;
                 restart_ = true;
                 //run();
                 break;

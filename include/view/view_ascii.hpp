@@ -6,6 +6,7 @@
 #include <ostream>
 #include <iostream>
 #include <termios.h>
+#include <fstream>
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -31,14 +32,14 @@ private:
 
 struct AsciiView::Impl {
     std::ostream& out{std::cout};
-    std::string buffer = "\033[2J\033[H";
-
+    std::string buffer{};
     termios old_term{};
     bool terminal_configured{false};
 
     Impl();
     ~Impl();
 
+    void show();
     void clear_screen();
     void draw(const GameModel& model);
     void gotoxy(uint32_t x, uint32_t y);
@@ -51,6 +52,9 @@ struct AsciiView::Impl {
 private:
     void setup_terminal();
     void restore_terminal();
+
+    void hide_cursor();
+    void show_cursor();
 
     void draw_frame(uint32_t width, uint32_t height, 
                     Point curr_pos);
@@ -69,14 +73,16 @@ private:
 // Implementations
 // ----------------------------------------------------------------------------
 inline AsciiView::AsciiView() : impl_(std::make_unique<Impl>()) {}
-inline AsciiView::~AsciiView() = default;
+inline AsciiView::~AsciiView()  = default; /* {
+    impl_->buffer += "\033[2J\033[3J\033[H";
+    impl_->show();
+}*/
 
 inline void AsciiView::render(const GameModel& model) {
     impl_->buffer.clear();
     impl_->clear_screen();
     impl_->draw(model);
-    impl_->out << impl_->buffer;
-    impl_->out.flush();
+    impl_->show();
 }
 
 inline std::optional<Event> AsciiView::poll_event() {
@@ -85,14 +91,33 @@ inline std::optional<Event> AsciiView::poll_event() {
 
 inline AsciiView::Impl::Impl() {
     setup_terminal();
+    
+    buffer += "\033[?1049h"; 
+    buffer += "\033[2J";      
+    buffer += "\033[H";      
+    //hide_cursor();
+    show();
+    buffer.clear();
 }
 
 inline AsciiView::Impl::~Impl() {
+    buffer.clear();
+    reset_color();
+    // show_cursor();
+    buffer += "\033[H";
+    buffer += "\033[2J";
+    buffer += "\033[?1049l";  
+    show();
+
     restore_terminal();
 }
 
+inline void AsciiView::Impl::show() {
+    out << buffer << std::flush;
+}
+
 inline void AsciiView::Impl::clear_screen() {
-    buffer+="\033[H";
+    buffer += "\033[2J\033[H";
 }
 
 inline void AsciiView::Impl::set_color(const int bg_color) {
@@ -103,6 +128,14 @@ inline void AsciiView::Impl::reset_color() {
     set_color(ansi_reset);
 }
 
+inline void AsciiView::Impl::hide_cursor() {
+    buffer+="\033[?25l";
+}
+
+inline void AsciiView::Impl::show_cursor() {
+    buffer+="\033[?25h";
+}
+
 inline void AsciiView::Impl::gotoxy(uint32_t x, uint32_t y) {
     buffer += "\033[" + std::to_string(y + 1) + ";" + std::to_string(x + 1) + "H";
 }
@@ -111,18 +144,18 @@ inline void AsciiView::Impl::gotoxy(const Point& p) {
     buffer += "\033[" + std::to_string(p.y + 1) + ";" + std::to_string(p.x + 1) + "H";
 }
 
-inline void AsciiView::Impl::draw(const GameModel& model) { //TODO create draw_full
+inline void AsciiView::Impl::draw(const GameModel& model) {
     uint32_t width = model.width;
     uint32_t height = model.height;
 
     Point start_p = model.start_point;
     draw_preview(width, height, start_p);
+
     start_p.y += 3;
     draw_frame(width, height, start_p);
 
     draw_rabbits(model);
     draw_snakes(model);
-   
     gotoxy(0, 0);
 }
 
@@ -163,28 +196,33 @@ inline void AsciiView::Impl::draw_snakes(const GameModel& model) {
     }
 }
 
-inline void AsciiView::Impl::draw_frame(uint32_t width, uint32_t height, 
-                                 Point curr_pos) {
+inline void AsciiView::Impl::draw_frame(uint32_t width, uint32_t height, Point curr_pos) {
+    
     set_color(fg_black);
     set_color(bg_bright_black);
+
     gotoxy(curr_pos);
-    ++curr_pos.y;
     buffer += "┏";
     for (uint32_t x = 0; x < width; ++x) {
         buffer += "━";
     }
-    buffer += "┓\n";
+    buffer += "┓";
+
+    ++curr_pos.y;
 
     for (uint32_t y = 0; y < height; ++y) {
         gotoxy(curr_pos);
-        ++curr_pos.y;
-        buffer +=  "┃";
+        buffer += "┃";
+
+        set_color(bg_green);
         for (uint32_t x = 0; x < width; ++x) {
-            set_color(bg_green);
             buffer += " ";
         }
+
         set_color(bg_bright_black);
-        buffer += "┃\n";
+        buffer += "┃";
+
+        ++curr_pos.y;
     }
 
     gotoxy(curr_pos);
@@ -192,44 +230,45 @@ inline void AsciiView::Impl::draw_frame(uint32_t width, uint32_t height,
     for (uint32_t x = 0; x < width; ++x) {
         buffer += "━";
     }
-    buffer += "┛\n";
+    buffer += "┛";
+
     reset_color();
 }
 
-inline void AsciiView::Impl::draw_preview(uint32_t width, uint32_t height, 
-                      Point curr_pos) {
-    
-    uint32_t start_x = curr_pos.x + width/2 - 6;
+inline void AsciiView::Impl::draw_preview(uint32_t width, uint32_t /*height*/, Point curr_pos) {
+    uint32_t title_len = 10; // " S N A K E S "
+    uint32_t start_x = curr_pos.x + width / 2 - title_len / 2;
 
-    gotoxy(curr_pos);
     set_color(bg_green);
     set_color(fg_black);
+
+    gotoxy(curr_pos);
     buffer += "╔";
     for (uint32_t x = 0; x < width; ++x) {
         buffer += "═";
     }
-    buffer += "╗\n";
-    ++curr_pos.y;
+    buffer += "╗";
 
+    ++curr_pos.y;
     gotoxy(curr_pos);
-    buffer +=  "║";
+    buffer += "║";
     for (uint32_t x = 0; x < width; ++x) {
         buffer += " ";
     }
-    buffer += "║\n";
-    ++curr_pos.y;
+    buffer += "║";
 
+    ++curr_pos.y;
     gotoxy(curr_pos);
     buffer += "╚";
     for (uint32_t x = 0; x < width; ++x) {
         buffer += "═";
     }
-    buffer += "╝\n";
+    buffer += "╝";
 
     gotoxy(start_x, curr_pos.y - 1);
     buffer += " S N A K E S ";
-    reset_color();
 
+    reset_color();
 }
 
 inline void AsciiView::Impl::setup_terminal() {
