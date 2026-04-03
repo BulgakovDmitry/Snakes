@@ -13,7 +13,9 @@ private:
     int32_t color_;
     Point spawn_point_;
     bool human_controlled_;
-    
+
+    bool direction_changed_this_tick_{false};
+
 public:
 
     Snake(int32_t color, Direction direction, Point spawn_point_, bool human_controlled);
@@ -46,8 +48,13 @@ inline Snake::Snake(int32_t color, Direction direction, Point spawn_point, bool 
     }
 
 inline void Snake::set_direction(Direction direction) noexcept {
+    if (direction_changed_this_tick_) {
+        return;
+    }
+
     if (!is_opposite(direction_, direction)) {
         direction_ = direction;
+        direction_changed_this_tick_ = true;
     }
 }
 
@@ -95,6 +102,7 @@ inline void Snake::move() {
 
     }
     body_.pop_back();
+    direction_changed_this_tick_ = false;
 }
 
 struct Snake::Builder {

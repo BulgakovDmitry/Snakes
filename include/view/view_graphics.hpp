@@ -1,17 +1,18 @@
 #pragma once
 
-// #include <cstddef>
-// #include <cstdint>
-// #include "view.hpp"
+#include <cstddef>
+#include <cstdint>
+#include "view.hpp"
 
-// namespace snakes {
+namespace snakes {
     
-// class GraphicsView final : public IView {
-// public:
-//     GraphicsView(uint32_t screen_width = 1280, uint32_t screen_height = 720);
-//     ~GraphicsView();
+class GraphicsView final : public IView {
+public:
+    GraphicsView(uint32_t screen_width = 1280, uint32_t screen_height = 720);
+    GraphicsView() = default;
+    ~GraphicsView();
 
-//     virtual void render(const GameModel& model) override;
-// };
+    virtual void render(GameModel& model) override;
+};
 
-// } // namespace snakes
+} // namespace snakes

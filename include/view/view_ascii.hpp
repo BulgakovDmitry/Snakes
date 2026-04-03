@@ -8,6 +8,7 @@
 #include <termios.h>
 #include <fstream>
 #include <unistd.h>
+#include <sys/ioctl.h>
 #include <fcntl.h>
 
 #include "game/game_model.hpp"
@@ -21,7 +22,7 @@ public:
     AsciiView();
     ~AsciiView();
 
-    void render(const GameModel& model) override;
+    void render(GameModel& model) override;
     
     std::optional<Event> poll_event() override;
 
@@ -49,6 +50,7 @@ struct AsciiView::Impl {
     void reset_color();
 
     std::optional<Event> read_key();
+    void update_terminal_size(GameModel& model);
 
 private:
     void setup_terminal();
@@ -79,7 +81,8 @@ inline AsciiView::~AsciiView()  = default; /* {
     impl_->show();
 }*/
 
-inline void AsciiView::render(const GameModel& model) {
+inline void AsciiView::render(GameModel& model) {
+    impl_->update_terminal_size(model);
     impl_->buffer.clear();
     impl_->clear_screen();
     impl_->draw(model);
@@ -399,6 +402,25 @@ inline std::optional<Event> AsciiView::Impl::read_key() {
     }
 
     return std::nullopt;
+}
+
+inline void AsciiView::Impl::update_terminal_size(GameModel& model) {
+    winsize ws{};
+
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1) {
+        model.width = 60;
+        model.height = 20;
+        return;
+    }
+
+    const int32_t usable_w =
+        static_cast<int32_t>(ws.ws_col) - static_cast<int32_t>(model.start_point.x) - 2;
+
+    const int32_t usable_h =
+        static_cast<int32_t>(ws.ws_row) - static_cast<int32_t>(model.start_point.y) - 5;
+
+    model.width = usable_w > 20 ? static_cast<uint32_t>(usable_w) : 20;
+    model.height = usable_h > 10 ? static_cast<uint32_t>(usable_h) : 10;
 }
 
 } // namespace snakes

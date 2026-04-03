@@ -18,8 +18,8 @@ namespace snakes {
 
 struct GameModel {
 
-    uint32_t width;
-    uint32_t height;
+    uint32_t width{60};
+    uint32_t height{20};
 
     Point start_point{0, 0};
     
@@ -31,7 +31,6 @@ struct GameModel {
     // TODO: builder with insertion human_snakes
     int score{0};
 
-    //GameModel(uint32_t w = 120, uint32_t h = 30) : width(w), height(h) {}
     GameModel() = default;
 
     static constexpr std::size_t max_rabbits = 10;
@@ -49,8 +48,6 @@ private:
     std::pair<bool, std::list<Rabbit>::const_iterator> has_eaten_rabbit(const Snake& snake) const;
     void eat_rabbit(Snake& snake, std::list<Rabbit>::const_iterator rabbit_it);
     void try_eat_rabbit();
-
-    void update_terminal_size();
 };
 
 // ----------------------------------------------------------------------------
@@ -58,7 +55,6 @@ private:
 // Implementations
 // ----------------------------------------------------------------------------
 inline void GameModel::update() {
-    update_terminal_size();
     update_snakes();
     update_rabbits();
     remove_crashed_snakes();
@@ -209,25 +205,6 @@ inline void GameModel::try_eat_rabbit() {
             eat_rabbit(snake, rabbit_it);
         }
     }
-}
-
-inline void GameModel::update_terminal_size() {
-    winsize ws{};
-
-    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1) {
-        width = 60;
-        height = 20;
-        return;
-    }
-
-    const int32_t usable_w =
-        static_cast<int32_t>(ws.ws_col) - static_cast<int32_t>(start_point.x) - 2;
-
-    const int32_t usable_h =
-        static_cast<int32_t>(ws.ws_row) - static_cast<int32_t>(start_point.y) - 5;
-
-    width = usable_w > 20 ? static_cast<uint32_t>(usable_w) : 20;
-    height = usable_h > 10 ? static_cast<uint32_t>(usable_h) : 10;
 }
 
 } // namespace snakes

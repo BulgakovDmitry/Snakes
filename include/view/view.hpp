@@ -10,7 +10,7 @@ class IView {
 public:
     virtual ~IView() = default;
     
-    virtual void render(const GameModel& model) = 0;
+    virtual void render(GameModel& model) = 0;
     virtual std::optional<Event> poll_event() = 0;
 };
 

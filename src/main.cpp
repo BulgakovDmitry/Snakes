@@ -23,13 +23,13 @@ int main() {
         .build();
     model.snakes.push_back(snake_2);
 
-    // snakes::Snake snake_bot1 = snakes::Snake::Builder()
-    //     .set_color(fg_magenta)
-    //     .set_direction(snakes::Direction::right)
-    //     .set_spawn_point({6, 8})
-    //     .set_human_controlled(false)
-    //     .build();
-    // model.snakes.push_back(snake_bot1);
+    snakes::Snake snake_bot1 = snakes::Snake::Builder()
+        .set_color(fg_magenta)
+        .set_direction(snakes::Direction::right)
+        .set_spawn_point({10, 8})
+        .set_human_controlled(false)
+        .build();
+    model.snakes.push_back(snake_bot1);
     
 
     //std::cout << "Welcome to Snakes!" << std::endl;
