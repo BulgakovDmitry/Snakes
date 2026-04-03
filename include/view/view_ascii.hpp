@@ -35,6 +35,7 @@ struct AsciiView::Impl {
     std::string buffer{};
     termios old_term{};
     bool terminal_configured{false};
+    // bool play_zone_drawed{false};
 
     Impl();
     ~Impl();
@@ -112,8 +113,24 @@ inline AsciiView::Impl::~Impl() {
     restore_terminal();
 }
 
+// inline void AsciiView::Impl::show() {
+//     out << buffer << std::flush;
+// }
 inline void AsciiView::Impl::show() {
-    out << buffer << std::flush;
+    //out << buffer << std::flush;
+    int written = 0;
+    while (written != buffer.size()) {
+        int n = write(1, buffer.c_str() + written, buffer.size() - written);
+        if (n < 0) {
+            if (errno == EINTR || errno == EAGAIN) {
+                usleep(100);
+                continue;
+            }
+            perror("write");
+            exit(errno);
+        }
+        written += n;
+    }
 }
 
 inline void AsciiView::Impl::clear_screen() {
@@ -147,7 +164,7 @@ inline void AsciiView::Impl::gotoxy(const Point& p) {
 inline void AsciiView::Impl::draw(const GameModel& model) {
     uint32_t width = model.width;
     uint32_t height = model.height;
-
+    
     Point start_p = model.start_point;
     draw_preview(width, height, start_p);
 

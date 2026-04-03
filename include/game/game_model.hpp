@@ -31,7 +31,7 @@ struct GameModel {
     // TODO: builder with insertion human_snakes
     int score{0};
 
-    //GameModel(uint32_t w = 110, uint32_t h = 30) : width(w), height(h) {}
+    //GameModel(uint32_t w = 120, uint32_t h = 30) : width(w), height(h) {}
     GameModel() = default;
 
     static constexpr std::size_t max_rabbits = 10;
