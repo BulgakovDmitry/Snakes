@@ -48,9 +48,7 @@ inline Snake::Snake(int32_t color, Direction direction, Point spawn_point, bool 
     }
 
 inline void Snake::set_direction(Direction direction) noexcept {
-    if (direction_changed_this_tick_) {
-        return;
-    }
+    if (direction_changed_this_tick_) return;
 
     if (!is_opposite(direction_, direction)) {
         direction_ = direction;
