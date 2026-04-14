@@ -5,8 +5,8 @@
 
 int main() {
     snakes::GameModel model{};
-    //snakes::AsciiView view{};
-    snakes::GraphicsView view{};
+    snakes::AsciiView view{};
+    //snakes::GraphicsView view{};
 
     snakes::Snake snake_1 = snakes::Snake::Builder()
         .set_color(fg_red)
@@ -19,18 +19,34 @@ int main() {
     snakes::Snake snake_2 = snakes::Snake::Builder()
         .set_color(fg_blue)
         .set_direction(snakes::Direction::right)
-        .set_spawn_point({4, 8})
+        .set_spawn_point({40, 8})
         .set_human_controlled(true)
         .build();
     model.snakes.push_back(snake_2);
 
-    // snakes::Snake snake_bot1 = snakes::Snake::Builder()
+    snakes::Snake snake_bot1 = snakes::Snake::Builder()
+        .set_color(fg_magenta)
+        .set_direction(snakes::Direction::right)
+        .set_spawn_point({10, 20})
+        .set_human_controlled(false)
+        .build();
+    model.snakes.push_back(snake_bot1);
+
+    snakes::Snake snake_bot2 = snakes::Snake::Builder()
+        .set_color(fg_magenta)
+        .set_direction(snakes::Direction::right)
+        .set_spawn_point({10, 30})
+        .set_human_controlled(false)
+        .build();
+    model.snakes.push_back(snake_bot2);
+
+    // snakes::Snake snake_bot3 = snakes::Snake::Builder()
     //     .set_color(fg_magenta)
     //     .set_direction(snakes::Direction::right)
-    //     .set_spawn_point({10, 8})
+    //     .set_spawn_point({10, 40})
     //     .set_human_controlled(false)
     //     .build();
-    // model.snakes.push_back(snake_bot1);
+    // model.snakes.push_back(snake_bot3);
     
 
     //std::cout << "Welcome to Snakes!" << std::endl;

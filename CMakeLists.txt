@@ -13,6 +13,7 @@ add_executable(Snakes
     src/main.cpp
     src/view_ascii.cpp
     src/view_graphics.cpp
+    src/bot.cpp
 )
 
 target_include_directories(Snakes PRIVATE include)

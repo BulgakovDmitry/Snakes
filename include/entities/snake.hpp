@@ -1,6 +1,7 @@
 #pragma once
 
 #include <deque>
+#include <stdexcept>
 #include "core/types.hpp"
 #include "view/colors.hpp"
 

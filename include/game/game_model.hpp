@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#include <optional>
 #include <utility>
 #include <list>
 #include <vector>
@@ -13,6 +14,7 @@
 #include <unordered_map>
 #include "entities/snake.hpp"
 #include "entities/rabbit.hpp"
+#include "core/bot.hpp"
 
 namespace snakes {
 
@@ -25,7 +27,9 @@ struct GameModel {
     
     std::list<Snake>  snakes{};
     std::list<Rabbit> rabbits{};
-    std::vector<std::reference_wrapper<Snake>> human_snakes{};
+
+    std::vector<Snake*> human_snakes{};
+    std::vector<Snake*> bot_snakes{};
 
 
     // TODO: builder with insertion human_snakes
@@ -33,7 +37,7 @@ struct GameModel {
 
     GameModel() = default;
 
-    static constexpr std::size_t max_rabbits = 10;
+    static constexpr std::size_t max_rabbits = 30;
 
     void update(); // split to steps
 
@@ -48,6 +52,8 @@ private:
     std::pair<bool, std::list<Rabbit>::const_iterator> has_eaten_rabbit(const Snake& snake) const;
     void eat_rabbit(Snake& snake, std::list<Rabbit>::const_iterator rabbit_it);
     void try_eat_rabbit();
+
+    void update_bot_snakes();
 };
 
 // ----------------------------------------------------------------------------
@@ -55,10 +61,11 @@ private:
 // Implementations
 // ----------------------------------------------------------------------------
 inline void GameModel::update() {
+    update_bot_snakes(); 
     update_snakes();
-    update_rabbits();
-    remove_crashed_snakes();
     try_eat_rabbit();
+    remove_crashed_snakes();
+    update_rabbits();
 }
 
 inline void GameModel::update_rabbits() {
@@ -149,13 +156,13 @@ inline std::vector<std::list<Snake>::const_iterator> GameModel::check_collisions
             continue;
         }
 
-        // // Check collision with itself
-        // for (std::size_t i = 1; i < it1->body().size(); ++i) {
-        //     if (it1->body()[i] == head) {
-        //         crashed_snakes.push_back(it1);
-        //         break;
-        //     }
-        // }
+        // Check collision with itself
+        for (std::size_t i = 1; i < it1->body().size(); ++i) {
+            if (it1->body()[i] == head) {
+                crashed_snakes.push_back(it1);
+                break;
+            }
+        }
 
         // Check collision with other snakes
         for (auto it2 = snakes.begin(); it2 != snakes.end(); ++it2) {
@@ -203,6 +210,14 @@ inline void GameModel::try_eat_rabbit() {
         auto [eaten, rabbit_it] = has_eaten_rabbit(snake);
         if (eaten) {
             eat_rabbit(snake, rabbit_it);
+        }
+    }
+}
+
+inline void GameModel::update_bot_snakes() {
+    for (Snake* snake : bot_snakes) {
+        if (snake) {
+            snake->set_direction(choose_bot_direction(*this, *snake));
         }
     }
 }
