@@ -9,8 +9,8 @@ namespace snakes {
     
 class GraphicsView final : public IView {
 public:
-    //GraphicsView(uint32_t screen_width = 1280, uint32_t screen_height = 720);
-    GraphicsView();
+    GraphicsView(uint32_t screen_width = 1280, uint32_t screen_height = 720);
+    //GraphicsView();
     ~GraphicsView();
 
     void render(GameModel& model) override;
