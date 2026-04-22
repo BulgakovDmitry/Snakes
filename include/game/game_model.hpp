@@ -30,13 +30,9 @@ struct GameModel {
 
     std::vector<Snake*> human_snakes{};
 
-
-    // TODO: builder with insertion human_snakes
-    int score{0};
-
     GameModel() = default;
 
-    static constexpr std::size_t max_rabbits = 5;
+    std::size_t max_rabbits{5};
 
     void update(); // split to steps
 
