@@ -38,12 +38,9 @@ inline Game::Game(GameModel& model, IView& view)
     for (auto& snake : model_.snakes) {
         if (snake.is_human_controlled()) {
             model_.human_snakes.push_back(std::addressof(snake));
-        } else {
-            model_.bot_snakes.push_back(std::addressof(snake));
         }
     }
 }
-
 
 inline void Game::run() {
     running_ = true;

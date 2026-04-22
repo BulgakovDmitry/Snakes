@@ -29,7 +29,6 @@ struct GameModel {
     std::list<Rabbit> rabbits{};
 
     std::vector<Snake*> human_snakes{};
-    std::vector<Snake*> bot_snakes{};
 
 
     // TODO: builder with insertion human_snakes
@@ -37,7 +36,7 @@ struct GameModel {
 
     GameModel() = default;
 
-    static constexpr std::size_t max_rabbits = 30;
+    static constexpr std::size_t max_rabbits = 5;
 
     void update(); // split to steps
 
@@ -215,9 +214,9 @@ inline void GameModel::try_eat_rabbit() {
 }
 
 inline void GameModel::update_bot_snakes() {
-    for (Snake* snake : bot_snakes) {
-        if (snake) {
-            snake->set_direction(choose_bot_direction(*this, *snake));
+    for (Snake& snake : snakes) {
+        if (!snake.is_human_controlled()) {
+            snake.set_direction(choose_bot_direction(*this, snake));
         }
     }
 }
