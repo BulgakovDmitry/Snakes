@@ -1,8 +1,11 @@
 #pragma once
 
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <vector>
+
 #include "view.hpp"
 
 namespace snakes {
@@ -14,6 +17,11 @@ public:
 
     void render(GameModel& model) override;
     std::optional<Event> poll_event() override;
+    bool show_scoreboard(const std::vector<ScoreboardEntry>& entries,
+                         std::size_t current_round,
+                         std::size_t total_rounds,
+                         bool final_screen,
+                         std::chrono::milliseconds duration) override;
 
 private:
     struct Impl;

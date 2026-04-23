@@ -1,13 +1,19 @@
 #pragma once
 
-#include <thread>
 #include <chrono>
+#include <optional>
 #include <stdexcept>
-#include <iostream>
+#include <thread>
+
 #include "game/game_model.hpp"
 #include "view/view.hpp"
 
 namespace snakes {
+
+struct RoundResult {
+    bool exit_requested{false};
+    std::optional<int32_t> winner_color{};
+};
 
 class Game {
 private:
@@ -23,16 +29,13 @@ public:
     Game(GameModel& model, IView& view);
 
     void run();
+    RoundResult run_round();
 
 private:
     void process_event();
+    bool is_round_over() const;
 }; 
 
-
-// ----------------------------------------------------------------------------
-// @section Implementations
-// Implementations
-// ----------------------------------------------------------------------------
 inline Game::Game(GameModel& model, IView& view)
     : model_(model), view_(view) {
     for (auto& snake : model_.snakes) {
@@ -44,16 +47,56 @@ inline Game::Game(GameModel& model, IView& view)
 
 inline void Game::run() {
     running_ = true;
+    paused_ = false;
+
     while (running_) {
-        // std::cout << "Running game loop..." << std::endl;
         process_event();
         view_.render(model_);
 
-        if(!paused_)
+        if (!paused_) {
+            model_.update();
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(90));
+    }
+}
+
+inline RoundResult Game::run_round() {
+    running_ = true;
+    paused_ = false;
+
+    RoundResult result{};
+
+    while (running_) {
+        process_event();
+
+        if (!running_) {
+            result.exit_requested = true;
+            break;
+        }
+
+        view_.render(model_);
+
+        if (!paused_) {
             model_.update();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(90)); 
+            if (is_round_over()) {
+                view_.render(model_);
+                if (model_.snakes.size() == 1) {
+                    result.winner_color = model_.snakes.front().color();
+                }
+                break;
+            }
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(90));
     }
+
+    return result;
+}
+
+inline bool Game::is_round_over() const {
+    return model_.snakes.size() <= 1;
 }
 
 inline void Game::process_event() {
@@ -65,7 +108,6 @@ inline void Game::process_event() {
             }
             case KeyEvents::restart: {
                 restart_ = true;
-                //run();
                 break;
             }
             case KeyEvents::pause: {
@@ -114,19 +156,17 @@ inline void Game::process_event() {
                 }
                 break;
             }
-            case KeyEvents::right_2: {  
+            case KeyEvents::right_2: {
                 if (model_.human_snakes.size() > 1 && model_.human_snakes[1]) {
                     model_.human_snakes[1]->set_direction(Direction::right);
                 }
                 break;
             }
-            
             default: {
                 throw std::runtime_error("Unsupported event");
             }
         }
     }
-
 }
 
 } // namespace snakes
