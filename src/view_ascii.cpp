@@ -254,11 +254,16 @@ void AsciiView::Impl::draw_preview(const GameModel& model, Point curr_pos) {
         gotoxy(x, y);
         set_color(bg_green);
         set_color(snake.color());
+        buffer += "■";
+        reset_color();
+        ++x;
+
         set_color(bg_green);
         set_color(fg_bright_red);
         for (std::size_t i = 0; i < snake.lives() && x < width; ++i) {
             gotoxy(x, y);
             buffer += "♥";
+            ++x;
         }
         reset_color();
         x += 2;
