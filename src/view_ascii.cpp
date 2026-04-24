@@ -32,6 +32,7 @@ private:
     void draw_frame(uint32_t width, uint32_t height, Point curr_pos);
     void draw_preview(const GameModel& model, Point curr_pos);
     void draw_rabbits(const GameModel& model);
+    void draw_health_items(const GameModel& model);
     void draw_snakes(const GameModel& model);
 };
 
@@ -130,6 +131,7 @@ void AsciiView::Impl::draw(const GameModel& model) {
     draw_frame(width, height, start_p);
 
     draw_rabbits(model);
+    draw_health_items(model);
     draw_snakes(model);
     gotoxy(0, 0);
 }
@@ -140,6 +142,16 @@ void AsciiView::Impl::draw_rabbits(const GameModel& model) {
         set_color(bg_green);
         set_color(fg_white);
         buffer += "¤";
+        reset_color();
+    }
+}
+
+void AsciiView::Impl::draw_health_items(const GameModel& model) {
+    for (const auto& health : model.health_items) {
+        gotoxy(health.position());
+        set_color(bg_green);
+        set_color(fg_bright_red);
+        buffer += "♥";
         reset_color();
     }
 }
@@ -234,6 +246,23 @@ void AsciiView::Impl::draw_preview(const GameModel& model, Point curr_pos) {
 
     uint32_t x = 2;
     const uint32_t y = curr_pos.y - 1;
+    for (const Snake& snake : model.snakes) {
+        if (x >= width) {
+            break;
+        }
+
+        gotoxy(x, y);
+        set_color(bg_green);
+        set_color(snake.color());
+        set_color(bg_green);
+        set_color(fg_bright_red);
+        for (std::size_t i = 0; i < snake.lives() && x < width; ++i) {
+            gotoxy(x, y);
+            buffer += "♥";
+        }
+        reset_color();
+        x += 2;
+    }
 
     reset_color();
 }

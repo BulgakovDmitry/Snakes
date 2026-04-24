@@ -89,7 +89,11 @@ struct GraphicsView::Impl {
 
     void draw_snakes(const GameModel& model);
     void draw_rabbits(const GameModel& model);
+    void draw_health_items(const GameModel& model);
     void draw_preview(const GameModel& model);
+
+    void draw_heart(sf::Vector2f center, float size, sf::Color color);
+    void draw_lives_preview(const GameModel& model);
 
     bool process_window_events(bool return_on_exit = false);
     void draw_scoreboard_screen(const std::vector<ScoreboardEntry>& entries,
@@ -129,6 +133,7 @@ void GraphicsView::render(GameModel& model) {
     impl_->window.clear(sf::Color(18, 24, 32));
 
     impl_->draw_preview(model);
+    impl_->draw_health_items(model);
     impl_->draw_rabbits(model);
     impl_->draw_snakes(model);
 
@@ -198,6 +203,102 @@ void GraphicsView::Impl::draw_rabbits(const GameModel& model) {
     }
 }
 
+void GraphicsView::Impl::draw_health_items(const GameModel& model) {
+    for (const Health& health : model.health_items) {
+        const Point p = health.position();
+
+        const float center_x = p.x * pixels_per_cell + pixels_per_cell * 0.5f;
+        const float center_y = p.y * pixels_per_cell + pixels_per_cell * 0.45f;
+
+        draw_heart(
+            {center_x, center_y},
+            pixels_per_cell * 0.85f,
+            sf::Color(230, 45, 75)
+        );
+    }
+}
+
+void GraphicsView::Impl::draw_heart(sf::Vector2f center, float size, sf::Color color) {
+    const float radius = size * 0.28f;
+
+    sf::CircleShape left_part(radius);
+    left_part.setFillColor(color);
+    left_part.setOrigin(radius, radius);
+    left_part.setPosition(center.x - radius * 0.75f,
+                          center.y - radius * 0.25f);
+    window.draw(left_part);
+
+    sf::CircleShape right_part(radius);
+    right_part.setFillColor(color);
+    right_part.setOrigin(radius, radius);
+    right_part.setPosition(center.x + radius * 0.75f,
+                           center.y - radius * 0.25f);
+    window.draw(right_part);
+
+    sf::ConvexShape bottom_part;
+    bottom_part.setPointCount(3);
+    bottom_part.setPoint(0, {center.x - size * 0.55f,
+                             center.y - radius * 0.15f});
+    bottom_part.setPoint(1, {center.x + size * 0.55f,
+                             center.y - radius * 0.15f});
+    bottom_part.setPoint(2, {center.x,
+                             center.y + size * 0.60f});
+    bottom_part.setFillColor(color);
+    window.draw(bottom_part);
+}
+
+void GraphicsView::Impl::draw_lives_preview(const GameModel& model) {
+    const float preview_height = 3.f * pixels_per_cell;
+
+    float x = 14.f;
+    float y = 8.f;
+
+    const float marker_size = 10.f;
+    const float heart_size = 14.f;
+    const float heart_gap = 4.f;
+    const float snake_gap = 26.f;
+    const float row_height = 24.f;
+
+    const float right_limit = static_cast<float>(window.getSize().x) - 14.f;
+
+    for (const Snake& snake : model.snakes) {
+        const float block_width =
+            marker_size + 10.f +
+            static_cast<float>(snake.lives()) * (heart_size + heart_gap) +
+            snake_gap;
+
+        if (x + block_width > right_limit) {
+            x = 14.f;
+            y += row_height;
+        }
+
+        if (y + heart_size > preview_height - 4.f) {
+            break;
+        }
+
+        sf::RectangleShape snake_marker({marker_size, marker_size});
+        snake_marker.setPosition(x, y + 4.f);
+        snake_marker.setFillColor(convert_to_sfml_color(snake.color()));
+        snake_marker.setOutlineThickness(1.f);
+        snake_marker.setOutlineColor(sf::Color(220, 220, 220));
+        window.draw(snake_marker);
+
+        x += marker_size + 10.f;
+
+        for (std::size_t i = 0; i < snake.lives(); ++i) {
+            draw_heart(
+                {x + heart_size * 0.5f, y + heart_size * 0.55f},
+                heart_size,
+                sf::Color(230, 45, 75)
+            );
+
+            x += heart_size + heart_gap;
+        }
+
+        x += snake_gap;
+    }
+}
+
 void GraphicsView::Impl::draw_preview(const GameModel& model) {
     const float title_height = 3.f * pixels_per_cell;
 
@@ -205,6 +306,8 @@ void GraphicsView::Impl::draw_preview(const GameModel& model) {
     title_box.setPosition(0.f, 0.f);
     title_box.setFillColor(sf::Color(32, 44, 60));
     window.draw(title_box);
+
+    draw_lives_preview(model);
 
     sf::RectangleShape field_frame({field_width * pixels_per_cell,
                                     field_height * pixels_per_cell});
