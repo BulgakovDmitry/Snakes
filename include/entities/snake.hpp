@@ -1,7 +1,10 @@
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
 #include <deque>
 #include <stdexcept>
+
 #include "core/types.hpp"
 #include "view/colors.hpp"
 
@@ -11,15 +14,22 @@ class Snake {
 private:
     std::deque<Point> body_;
     Direction direction_;
+    Direction spawn_direction_;
     int32_t color_;
     Point spawn_point_;
     bool human_controlled_;
+    std::size_t lives_{3};
 
     bool direction_changed_this_tick_{false};
 
-public:
+    void reset_body(Point spawn_point);
 
-    Snake(int32_t color, Direction direction, Point spawn_point_, bool human_controlled);
+public:
+    Snake(int32_t color,
+          Direction direction,
+          Point spawn_point,
+          bool human_controlled,
+          std::size_t lives = 3);
     struct Builder;
 
     void set_direction(Direction direction) noexcept;
@@ -28,10 +38,17 @@ public:
     bool located_on(Point point) const noexcept;
 
     Point head() const noexcept;
+    Point spawn_point() const noexcept;
     const std::deque<Point>& body() const noexcept;
     std::deque<Point>& body() noexcept;
     int32_t color() const noexcept;
     bool is_human_controlled() const noexcept;
+
+    std::size_t lives() const noexcept;
+    void add_life() noexcept;
+    bool lose_life() noexcept;
+    void respawn();
+    void respawn(Point spawn_point);
 
     void move();
 };
@@ -40,16 +57,31 @@ public:
 // @section Implementations
 // Implementations
 // ----------------------------------------------------------------------------
-inline Snake::Snake(int32_t color, Direction direction, Point spawn_point, bool human_controlled)
-  : direction_(direction), color_(color), spawn_point_(spawn_point), human_controlled_(human_controlled)
-    {
-        body_.push_back(spawn_point);
-        body_.push_front(spawn_point + Point{1, 0});
-        body_.push_front(spawn_point + Point{2, 0});
-    }
+inline Snake::Snake(int32_t color,
+                    Direction direction,
+                    Point spawn_point,
+                    bool human_controlled,
+                    std::size_t lives)
+  : direction_(direction),
+    spawn_direction_(direction),
+    color_(color),
+    spawn_point_(spawn_point),
+    human_controlled_(human_controlled),
+    lives_(lives) {
+    reset_body(spawn_point_);
+}
+
+inline void Snake::reset_body(Point spawn_point) {
+    body_.clear();
+    body_.push_back(spawn_point);
+    body_.push_front(spawn_point + Point{1, 0});
+    body_.push_front(spawn_point + Point{2, 0});
+}
 
 inline void Snake::set_direction(Direction direction) noexcept {
-    if (direction_changed_this_tick_) return;
+    if (direction_changed_this_tick_) {
+        return;
+    }
 
     if (!is_opposite(direction_, direction)) {
         direction_ = direction;
@@ -69,6 +101,7 @@ inline bool Snake::located_on(Point point) const noexcept {
 inline Direction Snake::direction() const noexcept { return direction_; }
 
 inline Point Snake::head() const noexcept { return body_.front(); }
+inline Point Snake::spawn_point() const noexcept { return spawn_point_; }
 
 inline const std::deque<Point>& Snake::body() const noexcept { return body_; }
 inline std::deque<Point>& Snake::body() noexcept { return body_; }
@@ -76,6 +109,30 @@ inline std::deque<Point>& Snake::body() noexcept { return body_; }
 inline int32_t Snake::color() const noexcept { return color_; }
 
 inline bool Snake::is_human_controlled() const noexcept { return human_controlled_; }
+
+inline std::size_t Snake::lives() const noexcept { return lives_; }
+
+inline void Snake::add_life() noexcept { ++lives_; }
+
+inline bool Snake::lose_life() noexcept {
+    if (lives_ == 0) {
+        return false;
+    }
+
+    --lives_;
+    return lives_ > 0;
+}
+
+inline void Snake::respawn() {
+    respawn(spawn_point_);
+}
+
+inline void Snake::respawn(Point spawn_point) {
+    spawn_point_ = spawn_point;
+    direction_ = spawn_direction_;
+    direction_changed_this_tick_ = false;
+    reset_body(spawn_point_);
+}
 
 inline void Snake::move() {
     switch (direction_) {
@@ -93,13 +150,12 @@ inline void Snake::move() {
         }
         case Direction::right: {
             body_.push_front(head() + Point{1, 0});
-            break;  
             break;
         }
         default:
             throw std::runtime_error("Invalid direction");
-
     }
+
     body_.pop_back();
     direction_changed_this_tick_ = false;
 }
@@ -109,26 +165,35 @@ struct Snake::Builder {
     int32_t color{fg_red};
     Point spawn_point_{4, 4};
     bool human_controlled_{false};
+    std::size_t lives_{3};
 
     Builder& set_direction(const Direction dir) {
         direction = dir;
         return *this;
     }
+
     Builder& set_color(const int32_t c) {
         color = c;
         return *this;
     }
+
     Builder& set_spawn_point(const Point p) {
         spawn_point_ = p;
         return *this;
     }
+
     Builder& set_human_controlled(const bool hc) {
         human_controlled_ = hc;
         return *this;
     }
 
+    Builder& set_lives(const std::size_t lives) {
+        lives_ = lives;
+        return *this;
+    }
+
     Snake build() const {
-        return Snake(color, direction, spawn_point_, human_controlled_);
+        return Snake(color, direction, spawn_point_, human_controlled_, lives_);
     }
 };
 

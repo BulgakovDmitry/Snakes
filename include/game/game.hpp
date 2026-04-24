@@ -38,11 +38,7 @@ private:
 
 inline Game::Game(GameModel& model, IView& view)
     : model_(model), view_(view) {
-    for (auto& snake : model_.snakes) {
-        if (snake.is_human_controlled()) {
-            model_.human_snakes.push_back(std::addressof(snake));
-        }
-    }
+    model_.rebuild_human_snakes();
 }
 
 inline void Game::run() {
