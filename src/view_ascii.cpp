@@ -7,7 +7,6 @@ struct AsciiView::Impl {
     std::string buffer{};
     termios old_term{};
     bool terminal_configured{false};
-    // bool play_zone_drawed{false};
 
     Impl();
     ~Impl();
@@ -30,15 +29,10 @@ private:
     void hide_cursor();
     void show_cursor();
 
-    void draw_frame(uint32_t width, uint32_t height, 
-                    Point curr_pos);
-
-    void draw_preview(uint32_t width, uint32_t height, 
-                      Point curr_pos);
-
+    void draw_frame(uint32_t width, uint32_t height, Point curr_pos);
+    void draw_preview(const GameModel& model, Point curr_pos);
     void draw_rabbits(const GameModel& model);
-
-    void draw_snakes(const GameModel& model);  
+    void draw_snakes(const GameModel& model);
 };
 
 // ----------------------------------------------------------------------------
@@ -62,11 +56,10 @@ std::optional<Event> AsciiView::poll_event() {
 
 AsciiView::Impl::Impl() {
     setup_terminal();
-    
-    buffer += "\033[?1049h"; 
-    buffer += "\033[2J";      
-    buffer += "\033[H";      
-    //hide_cursor();
+
+    buffer += "\033[?1049h";
+    buffer += "\033[2J";
+    buffer += "\033[H";
     show();
     buffer.clear();
 }
@@ -74,19 +67,17 @@ AsciiView::Impl::Impl() {
 AsciiView::Impl::~Impl() {
     buffer.clear();
     reset_color();
-    // show_cursor();
     buffer += "\033[H";
     buffer += "\033[2J";
-    buffer += "\033[?1049l";  
+    buffer += "\033[?1049l";
     show();
 
     restore_terminal();
 }
 
 void AsciiView::Impl::show() {
-    //out << buffer << std::flush;
     int written = 0;
-    while (written != buffer.size()) {
+    while (written != static_cast<int>(buffer.size())) {
         int n = write(1, buffer.c_str() + written, buffer.size() - written);
         if (n < 0) {
             if (errno == EINTR || errno == EAGAIN) {
@@ -113,11 +104,11 @@ void AsciiView::Impl::reset_color() {
 }
 
 void AsciiView::Impl::hide_cursor() {
-    buffer+="\033[?25l";
+    buffer += "\033[?25l";
 }
 
 void AsciiView::Impl::show_cursor() {
-    buffer+="\033[?25h";
+    buffer += "\033[?25h";
 }
 
 void AsciiView::Impl::gotoxy(uint32_t x, uint32_t y) {
@@ -131,9 +122,9 @@ void AsciiView::Impl::gotoxy(const Point& p) {
 void AsciiView::Impl::draw(const GameModel& model) {
     uint32_t width = model.width;
     uint32_t height = model.height;
-    
+
     Point start_p = model.start_point;
-    draw_preview(width, height, start_p);
+    draw_preview(model, start_p);
 
     start_p.y += 3;
     draw_frame(width, height, start_p);
@@ -143,16 +134,17 @@ void AsciiView::Impl::draw(const GameModel& model) {
     gotoxy(0, 0);
 }
 
-void AsciiView::Impl::draw_rabbits(const GameModel& model) {  
+void AsciiView::Impl::draw_rabbits(const GameModel& model) {
     for (const auto& rabbit : model.rabbits) {
         gotoxy(rabbit.position());
         set_color(bg_green);
+        set_color(fg_white);
         buffer += "¤";
         reset_color();
     }
 }
 
-void AsciiView::Impl::draw_snakes(const GameModel& model) {  
+void AsciiView::Impl::draw_snakes(const GameModel& model) {
     for (const Snake& snake : model.snakes) {
         const auto& body = snake.body();
 
@@ -164,24 +156,16 @@ void AsciiView::Impl::draw_snakes(const GameModel& model) {
         for (const Point& segment : body) {
             gotoxy(segment);
 
-            if (is_head) {
-                set_color(snake.color());  
-                set_color(bg_green);
-                buffer += "@";
-                reset_color();
-                is_head = false;
-            } else {
-                set_color(snake.color());  
-                set_color(bg_green); 
-                buffer += "o";
-                reset_color();
-            }
+            set_color(snake.color());
+            set_color(bg_green);
+            buffer += is_head ? "@" : "o";
+            reset_color();
+            is_head = false;
         }
     }
 }
 
 void AsciiView::Impl::draw_frame(uint32_t width, uint32_t height, Point curr_pos) {
-    
     set_color(fg_black);
     set_color(bg_bright_black);
 
@@ -219,9 +203,8 @@ void AsciiView::Impl::draw_frame(uint32_t width, uint32_t height, Point curr_pos
     reset_color();
 }
 
-void AsciiView::Impl::draw_preview(uint32_t width, uint32_t /*height*/, Point curr_pos) {
-    uint32_t title_len = 10; // " S N A K E S "
-    uint32_t start_x = curr_pos.x + width / 2 - title_len / 2;
+void AsciiView::Impl::draw_preview(const GameModel& model, Point curr_pos) {
+    const uint32_t width = model.width;
 
     set_color(bg_green);
     set_color(fg_black);
@@ -249,8 +232,8 @@ void AsciiView::Impl::draw_preview(uint32_t width, uint32_t /*height*/, Point cu
     }
     buffer += "╝";
 
-    gotoxy(start_x, curr_pos.y - 1);
-    buffer += " S N A K E S ";
+    uint32_t x = 2;
+    const uint32_t y = curr_pos.y - 1;
 
     reset_color();
 }

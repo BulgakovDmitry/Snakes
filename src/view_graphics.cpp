@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <cstddef>
 #include <optional>
 #include <string>
 #include <thread>
@@ -78,6 +79,7 @@ struct GraphicsView::Impl {
     sf::RenderWindow window;
     sf::RectangleShape shape;
     sf::Font font;
+    bool font_loaded{false};
 
     uint32_t field_width{0};
     uint32_t field_height{0};
@@ -109,8 +111,11 @@ GraphicsView::Impl::Impl(uint32_t field_w, uint32_t field_h)
                       static_cast<unsigned int>((field_height + 4) * pixels_per_cell)),
         "Snakes"
     );
+
     window.setFramerateLimit(60);
     shape.setFillColor(sf::Color::Green);
+
+    font_loaded = font.loadFromFile("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf");
 }
 
 void GraphicsView::render(GameModel& model) {
@@ -122,9 +127,11 @@ void GraphicsView::render(GameModel& model) {
     model.height = impl_->field_height;
 
     impl_->window.clear(sf::Color(18, 24, 32));
+
     impl_->draw_preview(model);
-    impl_->draw_snakes(model);
     impl_->draw_rabbits(model);
+    impl_->draw_snakes(model);
+
     impl_->window.display();
 }
 
@@ -155,6 +162,7 @@ void GraphicsView::Impl::draw_snakes(const GameModel& model) {
 
     for (const Snake& snake : model.snakes) {
         cell.setFillColor(convert_to_sfml_color(snake.color()));
+
         for (const Point& p : snake.body()) {
             cell.setPosition(p.x * pixels_per_cell, p.y * pixels_per_cell);
             window.draw(cell);
@@ -176,12 +184,16 @@ void GraphicsView::Impl::draw_rabbits(const GameModel& model) {
         const float base_x = p.x * pixels_per_cell;
         const float base_y = p.y * pixels_per_cell;
 
-        ear.setPosition(base_x + pixels_per_cell * 0.18f, base_y + pixels_per_cell * 0.02f);
-        window.draw(ear);
-        ear.setPosition(base_x + pixels_per_cell * 0.52f, base_y + pixels_per_cell * 0.02f);
+        ear.setPosition(base_x + pixels_per_cell * 0.18f,
+                        base_y + pixels_per_cell * 0.02f);
         window.draw(ear);
 
-        rabbit_shape.setPosition(base_x + pixels_per_cell * 0.18f, base_y + pixels_per_cell * 0.22f);
+        ear.setPosition(base_x + pixels_per_cell * 0.52f,
+                        base_y + pixels_per_cell * 0.02f);
+        window.draw(ear);
+
+        rabbit_shape.setPosition(base_x + pixels_per_cell * 0.18f,
+                                 base_y + pixels_per_cell * 0.22f);
         window.draw(rabbit_shape);
     }
 }
@@ -194,7 +206,8 @@ void GraphicsView::Impl::draw_preview(const GameModel& model) {
     title_box.setFillColor(sf::Color(32, 44, 60));
     window.draw(title_box);
 
-    sf::RectangleShape field_frame({field_width * pixels_per_cell, field_height * pixels_per_cell});
+    sf::RectangleShape field_frame({field_width * pixels_per_cell,
+                                    field_height * pixels_per_cell});
     field_frame.setPosition(0.f, title_height);
     field_frame.setFillColor(sf::Color(14, 18, 24));
     field_frame.setOutlineThickness(2.f);
@@ -204,17 +217,21 @@ void GraphicsView::Impl::draw_preview(const GameModel& model) {
 
 bool GraphicsView::Impl::process_window_events(bool return_on_exit) {
     sf::Event event;
+
     while (window.pollEvent(event)) {
         if (event.type == sf::Event::Closed) {
             window.close();
             return false;
         }
 
-        if (return_on_exit && event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Q) {
+        if (return_on_exit &&
+            event.type == sf::Event::KeyPressed &&
+            event.key.code == sf::Keyboard::Q) {
             window.close();
             return false;
         }
     }
+
     return true;
 }
 
@@ -225,7 +242,8 @@ void GraphicsView::Impl::draw_scoreboard_screen(const std::vector<ScoreboardEntr
     window.clear(sf::Color(12, 18, 28));
 
     const auto window_size = window.getSize();
-    const sf::Vector2f panel_size{window_size.x * 0.68f, window_size.y * 0.70f};
+    const sf::Vector2f panel_size{window_size.x * 0.72f,
+                                  window_size.y * 0.76f};
     const sf::Vector2f panel_pos{(window_size.x - panel_size.x) * 0.5f,
                                  (window_size.y - panel_size.y) * 0.5f};
 
@@ -241,25 +259,79 @@ void GraphicsView::Impl::draw_scoreboard_screen(const std::vector<ScoreboardEntr
     panel.setOutlineColor(sf::Color(110, 130, 165));
     window.draw(panel);
 
-    sf::RectangleShape header({panel_size.x, 80.f});
+    sf::RectangleShape header({panel_size.x, 86.f});
     header.setPosition(panel_pos);
     header.setFillColor(sf::Color(46, 64, 92));
     window.draw(header);
 
-    float y = panel_pos.y + 140.f;
+    if (font_loaded) {
+        sf::Text title;
+        title.setFont(font);
+        title.setCharacterSize(30);
+        title.setFillColor(sf::Color::White);
+        title.setString(final_screen ? "Tournament finished" : "Tournament scoreboard");
+        title.setPosition(panel_pos.x + 28.f, panel_pos.y + 14.f);
+        window.draw(title);
+
+        sf::Text subtitle;
+        subtitle.setFont(font);
+        subtitle.setCharacterSize(18);
+        subtitle.setFillColor(sf::Color(210, 220, 235));
+
+        if (final_screen) {
+            subtitle.setString("Final result. Target score: " + std::to_string(total_rounds));
+        } else {
+            subtitle.setString("Round " + std::to_string(current_round) +
+                               ". First to " + std::to_string(total_rounds) + " wins.");
+        }
+
+        subtitle.setPosition(panel_pos.x + 30.f, panel_pos.y + 54.f);
+        window.draw(subtitle);
+    }
+
+    float y = panel_pos.y + 120.f;
     std::size_t place = 1;
+
     for (const auto& entry : entries) {
         sf::RectangleShape row({panel_size.x - 50.f, 62.f});
         row.setPosition(panel_pos.x + 25.f, y);
-        row.setFillColor(place % 2 == 1 ? sf::Color(41, 52, 70) : sf::Color(37, 47, 63));
+        row.setFillColor(place % 2 == 1
+            ? sf::Color(41, 52, 70)
+            : sf::Color(37, 47, 63));
         row.setOutlineThickness(1.5f);
         row.setOutlineColor(sf::Color(74, 89, 116));
         window.draw(row);
 
         sf::CircleShape bullet(11.f);
         bullet.setFillColor(convert_to_sfml_color(entry.color));
-        bullet.setPosition(panel_pos.x + 42.f, y + 19.f);
+        bullet.setPosition(panel_pos.x + 42.f, y + 20.f);
         window.draw(bullet);
+
+        if (font_loaded) {
+            sf::Text place_text;
+            place_text.setFont(font);
+            place_text.setCharacterSize(20);
+            place_text.setFillColor(sf::Color(210, 220, 235));
+            place_text.setString(std::to_string(place) + ".");
+            place_text.setPosition(panel_pos.x + 72.f, y + 18.f);
+            window.draw(place_text);
+
+            sf::Text name_text;
+            name_text.setFont(font);
+            name_text.setCharacterSize(20);
+            name_text.setFillColor(sf::Color::White);
+            name_text.setString(entry.label);
+            name_text.setPosition(panel_pos.x + 115.f, y + 18.f);
+            window.draw(name_text);
+
+            sf::Text score_text;
+            score_text.setFont(font);
+            score_text.setCharacterSize(22);
+            score_text.setFillColor(sf::Color(255, 235, 130));
+            score_text.setString("Score: " + std::to_string(entry.score));
+            score_text.setPosition(panel_pos.x + panel_size.x - 180.f, y + 17.f);
+            window.draw(score_text);
+        } 
 
         y += 74.f;
         ++place;
@@ -270,6 +342,7 @@ void GraphicsView::Impl::draw_scoreboard_screen(const std::vector<ScoreboardEntr
 
 std::optional<Event> GraphicsView::poll_event() {
     sf::Event event;
+
     while (impl_->window.pollEvent(event)) {
         if (event.type == sf::Event::Closed) {
             impl_->window.close();
@@ -278,18 +351,33 @@ std::optional<Event> GraphicsView::poll_event() {
 
         if (event.type == sf::Event::KeyPressed) {
             switch (event.key.code) {
-                case sf::Keyboard::W: return Event{KeyEvents::up_1};
-                case sf::Keyboard::S: return Event{KeyEvents::down_1};
-                case sf::Keyboard::A: return Event{KeyEvents::left_1};
-                case sf::Keyboard::D: return Event{KeyEvents::right_1};
-                case sf::Keyboard::Up: return Event{KeyEvents::up_2};
-                case sf::Keyboard::Down: return Event{KeyEvents::down_2};
-                case sf::Keyboard::Left: return Event{KeyEvents::left_2};
-                case sf::Keyboard::Right: return Event{KeyEvents::right_2};
-                case sf::Keyboard::Q: return Event{KeyEvents::exit};
-                case sf::Keyboard::P: return Event{KeyEvents::pause};
-                case sf::Keyboard::R: return Event{KeyEvents::restart};
-                default: break;
+                case sf::Keyboard::W:
+                    return Event{KeyEvents::up_1};
+                case sf::Keyboard::S:
+                    return Event{KeyEvents::down_1};
+                case sf::Keyboard::A:
+                    return Event{KeyEvents::left_1};
+                case sf::Keyboard::D:
+                    return Event{KeyEvents::right_1};
+
+                case sf::Keyboard::Up:
+                    return Event{KeyEvents::up_2};
+                case sf::Keyboard::Down:
+                    return Event{KeyEvents::down_2};
+                case sf::Keyboard::Left:
+                    return Event{KeyEvents::left_2};
+                case sf::Keyboard::Right:
+                    return Event{KeyEvents::right_2};
+
+                case sf::Keyboard::Q:
+                    return Event{KeyEvents::exit};
+                case sf::Keyboard::P:
+                    return Event{KeyEvents::pause};
+                case sf::Keyboard::R:
+                    return Event{KeyEvents::restart};
+
+                default:
+                    break;
             }
         }
     }
